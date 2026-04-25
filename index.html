@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TRAINING_LOG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        bg: '#F8F7F4',
+        surface: '#FCFBFA',
+        borderBase: '#DBD6CD',
+        borderL: '#E8E4DB',
+        ink: '#2A2520',
+        sub: '#7A756C',
+        inkLight: '#5A5550',
+        dev: '#C0392B',
+        contra: '#4A6B8C',
+        dual: '#D35400',
+        accent: '#E6B300',
+        vb: '#5E8073',
+      },
+    },
+  },
+};
+</script>
+<style>
+  html, body {
+    background: #F8F7F4;
+    color: #2A2520;
+    -webkit-font-smoothing: antialiased;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+  * { box-sizing: border-box; }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #DBD6CD; }
+  ::-webkit-scrollbar-thumb:hover { background: #7A756C; }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .label-micro { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 400; color: #7A756C; }
+  .label-dev { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+  .title-card { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+  .title-page { font-family: 'Noto Sans TC', sans-serif; font-size: 24px; letter-spacing: 0.04em; font-weight: 500; color: #2A2520; }
+  .body-text { font-family: 'Noto Sans TC', sans-serif; font-size: 13px; line-height: 1.8; font-weight: 300; color: #5A5550; }
+  .data-cell { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-variant-numeric: tabular-nums; font-weight: 400; }
+
+  .ui-card { background: #FCFBFA; border: 1px solid #DBD6CD; border-radius: 4px; }
+
+  .chip {
+    display: inline-flex; align-items: center;
+    padding: 4px 12px; border-radius: 12px;
+    border: 1px solid #DBD6CD; background: transparent;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s ease;
+    color: #2A2520;
+  }
+  .chip:hover { border-color: #7A756C; }
+  .chip.active { border-color: transparent; color: #FCFBFA; }
+  .chip.active.core { background: #7A756C; }
+  .chip.active.prep { background: transparent; border: 1px solid #2A2520; color: #2A2520; }
+
+  .cal-cell {
+    background: #FCFBFA;
+    padding: 10px 12px; cursor: pointer;
+    transition: background 0.2s ease;
+    position: relative;
+    min-height: 84px;
+    overflow: hidden;
+  }
+  .cal-cell:hover { background: #F4F2ED; }
+  .cal-cell.other-month { background: #F8F7F4; }
+  .cal-cell.other-month .day-num { color: #DBD6CD; }
+  .cal-cell.selected { outline: 1.5px solid #2A2520; outline-offset: -1.5px; z-index: 2; }
+  .cal-cell.today .day-num {
+    color: #2A2520;
+    position: relative;
+  }
+  .cal-cell.today .day-num::after {
+    content: '';
+    position: absolute;
+    inset: -3px -5px;
+    border: 1px solid #E6B300;
+    border-radius: 2px;
+  }
+  .day-num { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; display: inline-block; }
+
+  .marker { width: 6px; height: 6px; border-radius: 1px; display: inline-block; flex-shrink: 0; }
+  .marker.vb   { background: #5E8073; }
+
+  .chip.active.vb  { background: #5E8073; }
+
+  /* BLOCK CARD */
+  .block-card {
+    background: #FCFBFA;
+    border: 1px solid #DBD6CD;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .block-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #FCFBFA;
+    border-bottom: 1px solid #E8E4DB;
+    flex-wrap: wrap;
+  }
+  .block-card.collapsed .block-header { border-bottom: none; }
+  .block-body { padding: 16px 14px 14px; }
+
+  .block-type-dot {
+    width: 8px; height: 8px;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+  .block-type-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: #2A2520;
+  }
+  .block-summary {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: #7A756C;
+    text-transform: uppercase;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .block-time-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .block-time-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: #2A2520;
+    padding: 2px 4px;
+    outline: none;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+    width: 62px;
+  }
+  .block-time-input:hover { background: #F4F2ED; border-color: #DBD6CD; }
+  .block-time-input:focus { background: #F8F7F4; border-color: #2A2520; }
+  .block-time-dash { color: #7A756C; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .block-duration {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: #7A756C;
+    padding: 2px 6px;
+    border: 1px solid #E8E4DB;
+    border-radius: 2px;
+    background: #F8F7F4;
+  }
+
+  .block-icon-btn {
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #7A756C;
+    cursor: pointer;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    transition: all 0.2s ease;
+  }
+  .block-icon-btn:hover { color: #2A2520; border-color: #DBD6CD; }
+  .block-icon-btn.del:hover { color: #C0392B; border-color: #C0392B; }
+
+  .block-note-input,
+  textarea.block-note-input {
+    width: 100%;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    background: #F8F7F4;
+    border: 1px solid #DBD6CD;
+    border-radius: 2px;
+    padding: 8px 10px;
+    outline: none;
+    resize: vertical;
+    color: #2A2520;
+  }
+  .block-note-input:focus { border-color: #2A2520; }
+
+  /* VIEW TABS */
+  .view-tabs {
+    display: flex;
+    border: 1px solid #DBD6CD;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .view-tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    background: transparent;
+    border: none;
+    color: #7A756C;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .view-tab + .view-tab { border-left: 1px solid #DBD6CD; }
+  .view-tab:hover { color: #2A2520; background: #F4F2ED; }
+  .view-tab.active { background: #2A2520; color: #FCFBFA; }
+
+  /* MENU VIEW */
+  .menu-scroll { height: 100%; overflow-y: auto; }
+  .menu-wrap {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+  .menu-head { margin-bottom: 36px; }
+  .menu-subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #7A756C;
+    margin-top: 8px;
+  }
+  .menu-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #DBD6CD;
+  }
+  .menu-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .menu-meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #7A756C;
+  }
+  .menu-meta-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #2A2520;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
+
+  .menu-pattern {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: #DBD6CD;
+    border: 1px solid #DBD6CD;
+    border-radius: 2px;
+    margin-bottom: 40px;
+  }
+  .menu-day {
+    background: #FCFBFA;
+    padding: 20px 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+  .menu-day-wd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: #7A756C;
+  }
+  .menu-day-split {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: #2A2520;
+    font-weight: 500;
+  }
+  .menu-day-bar {
+    width: 32px;
+    height: 3px;
+    border-radius: 1px;
+  }
+  .menu-day.rest .menu-day-split { color: #DBD6CD; }
+  .menu-day.rest .menu-day-bar { background: transparent; border: 1px dashed #DBD6CD; height: 0; }
+
+  .menu-splits {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    margin-bottom: 28px;
+  }
+  .menu-card {
+    background: #FCFBFA;
+    border: 1px solid #DBD6CD;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .menu-card-head {
+    padding: 22px 22px 18px;
+    border-bottom: 1px solid #DBD6CD;
+    background: #F8F7F4;
+    position: relative;
+  }
+  .menu-card-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .menu-card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #7A756C;
+    margin-bottom: 4px;
+  }
+  .menu-card-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    color: #2A2520;
+  }
+  .menu-card-cn {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    color: #7A756C;
+    margin-left: 10px;
+    font-weight: 400;
+  }
+  .menu-card-freq {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: #2A2520;
+    padding: 4px 10px;
+    border: 1px solid #DBD6CD;
+    border-radius: 12px;
+    background: #FCFBFA;
+  }
+
+  .menu-card-body { padding: 4px 0; }
+  .menu-ex {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #E8E4DB;
+    align-items: flex-start;
+  }
+  .menu-ex:last-child { border-bottom: none; }
+  .menu-ex-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: #7A756C;
+    padding-top: 7px;
+  }
+  .menu-ex-main {
+    min-width: 0;
+  }
+  .menu-ex-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 3px;
+  }
+  .menu-ex-cn {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    color: #2A2520;
+    font-weight: 400;
+    line-height: 1.4;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .menu-ex-en {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #7A756C;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .menu-ex-scheme {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 4px 8px;
+    background: #F8F7F4;
+    border: 1px solid #E8E4DB;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+  }
+  .menu-ex-scheme:hover { border-color: #7A756C; background: #FCFBFA; }
+  .menu-ex-scheme:focus-within { border-color: #2A2520; background: #FCFBFA; }
+  .menu-ex-scheme input.menu-scheme-sets,
+  .menu-ex-scheme input.menu-scheme-reps {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    color: #2A2520;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    letter-spacing: 0;
+    border-radius: 0;
+    box-shadow: none;
+    height: auto;
+    min-height: 0;
+  }
+  .menu-ex-scheme input.menu-scheme-sets { width: 20px; }
+  .menu-ex-scheme input.menu-scheme-reps { width: 46px; }
+  .menu-ex-scheme input.menu-scheme-sets::-webkit-inner-spin-button,
+  .menu-ex-scheme input.menu-scheme-sets::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .menu-scheme-x {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #7A756C;
+  }
+  .menu-ex-note {
+    grid-column: 2 / -1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: #C0392B;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .menu-aux {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  /* ADD BLOCK BUTTONS */
+  .add-block-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 10px;
+    border: 1px dashed #DBD6CD;
+    background: transparent;
+    color: #7A756C;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  .add-block-btn:hover {
+    border-style: solid;
+    border-color: #2A2520;
+    color: #2A2520;
+    background: #FCFBFA;
+  }
+
+  .ex-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid #E8E4DB; }
+  .ex-row:last-child { border-bottom: none; }
+  .ex-check {
+    width: 14px; height: 14px;
+    border: 1px solid #DBD6CD; border-radius: 2px;
+    cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; margin-top: 3px;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .ex-check:hover { border-color: #2A2520; }
+  .ex-check.checked { background: #2A2520; border-color: #2A2520; }
+  .ex-check.checked::after {
+    content: '';
+    width: 7px; height: 4px;
+    border-left: 1.5px solid #FCFBFA;
+    border-bottom: 1.5px solid #FCFBFA;
+    transform: rotate(-45deg) translate(0, -1px);
+  }
+  .ex-row.skipped .ex-name { text-decoration: line-through; color: #7A756C; }
+  .ex-row.skipped .ex-check { pointer-events: none; border-style: dashed; }
+
+  .inset-panel {
+    background: #F8F7F4;
+    border-top: 1px solid #DBD6CD;
+    border-bottom: 1px solid #DBD6CD;
+    border-radius: 2px;
+    padding: 4px 16px;
+  }
+
+  input[type="number"], input[type="text"] {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    background: #FCFBFA;
+    border: 1px solid #DBD6CD;
+    color: #2A2520;
+    padding: 5px 8px;
+    border-radius: 2px;
+    text-align: center;
+    font-size: 12px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s ease;
+  }
+  input[type="number"]:focus, input[type="text"]:focus { border-color: #2A2520; }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 6px 12px;
+    border: 1px solid #DBD6CD;
+    background: transparent; color: #2A2520;
+    cursor: pointer; border-radius: 2px;
+    transition: all 0.2s ease;
+  }
+  .btn:hover { background: #2A2520; color: #FCFBFA; border-color: #2A2520; }
+  .btn-ghost { border-color: transparent; color: #7A756C; padding: 4px 8px; }
+  .btn-ghost:hover { background: transparent; color: #2A2520; border-color: transparent; }
+
+  .nav-btn {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid #DBD6CD; border-radius: 2px;
+    background: transparent; color: #2A2520;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    cursor: pointer; transition: all 0.2s ease;
+  }
+  .nav-btn:hover { background: #2A2520; color: #FCFBFA; border-color: #2A2520; }
+
+  /* CONFIG EDITOR */
+  .editor-section { margin-bottom: 28px; }
+  .editor-section-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: #7A756C; margin-bottom: 12px; text-transform: uppercase; }
+  .editor-pattern-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 4px; }
+  .editor-day-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: #7A756C; text-align: center; margin-bottom: 4px; text-transform: uppercase; }
+  .editor-day-select { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: #FCFBFA; border: 1px solid #DBD6CD; color: #2A2520; padding: 6px 2px; border-radius: 2px; width: 100%; text-align: center; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; text-align-last: center; }
+  .editor-day-select:focus { border-color: #2A2520; }
+  .editor-split-card { border: 1px solid #DBD6CD; border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
+  .editor-split-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #FCFBFA; border-bottom: 1px solid #E8E4DB; }
+  .editor-color-swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
+  .editor-split-name-input { font-family: 'Noto Sans TC', sans-serif; font-size: 13px; background: transparent; border: none; border-bottom: 1px solid #DBD6CD; color: #2A2520; padding: 1px 4px; outline: none; width: 120px; flex-shrink: 0; }
+  .editor-split-name-input:focus { border-bottom-color: #2A2520; }
+  .editor-split-en-input { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; background: transparent; border: none; border-bottom: 1px solid #DBD6CD; color: #2A2520; padding: 1px 4px; outline: none; width: 80px; flex-shrink: 0; }
+  .editor-split-en-input:focus { border-bottom-color: #2A2520; }
+  .editor-split-type-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.12em; color: #7A756C; padding: 2px 6px; border: 1px solid #DBD6CD; border-radius: 2px; text-transform: uppercase; cursor: pointer; flex-shrink: 0; }
+  .editor-split-type-badge:hover { border-color: #2A2520; color: #2A2520; }
+  .editor-del-split { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #C0392B; background: transparent; border: none; cursor: pointer; padding: 2px 4px; flex-shrink: 0; }
+  .editor-del-split:hover { text-decoration: underline; }
+  .editor-ex-list { padding: 8px 0; }
+  .editor-ex-row { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-bottom: 1px solid #F0EDE8; }
+  .editor-ex-row:last-child { border-bottom: none; }
+  .editor-ex-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #7A756C; flex-shrink: 0; width: 18px; }
+  .editor-ex-fields { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .editor-ex-row-top { display: flex; align-items: baseline; gap: 8px; }
+  .editor-ex-row-bot { display: flex; align-items: baseline; gap: 8px; }
+  .editor-ex-input, .editor-ex-en-input, .editor-ex-scheme-input {
+    background: transparent; border: none; border-bottom: 1px solid transparent; outline: none; padding: 2px 4px; width: auto;
+  }
+  .editor-ex-input { font-family: 'Noto Sans TC', sans-serif; font-size: 13px; color: #2A2520; flex: 1; min-width: 60px; }
+  .editor-ex-en-input { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #7A756C; flex: 1; min-width: 60px; }
+  .editor-ex-scheme-input { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #7A756C; width: 64px; flex-shrink: 0; text-align: center; }
+  .editor-ex-input:focus, .editor-ex-en-input:focus, .editor-ex-scheme-input:focus { border-bottom-color: #DBD6CD; }
+  .editor-skip-toggle { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #7A756C; background: transparent; border: 1px solid #DBD6CD; border-radius: 2px; padding: 1px 5px; cursor: pointer; flex-shrink: 0; }
+  .editor-skip-toggle.on { color: #C0392B; border-color: #C0392B; }
+  .editor-del-ex { color: #C0392B; background: transparent; border: none; cursor: pointer; font-size: 14px; line-height: 1; flex-shrink: 0; padding: 0 2px; }
+  .editor-add-ex { display: block; width: 100%; padding: 8px 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #7A756C; background: transparent; border: none; border-top: 1px dashed #DBD6CD; cursor: pointer; text-align: left; }
+  .editor-add-ex:hover { color: #2A2520; }
+  .editor-add-split { width: 100%; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #7A756C; background: transparent; border: 1px dashed #DBD6CD; border-radius: 4px; cursor: pointer; }
+  .editor-add-split:hover { border-color: #2A2520; color: #2A2520; }
+  .color-picker-input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="app" class="h-screen flex flex-col">
+  <!-- NAV -->
+  <nav class="h-[52px] border-b border-borderBase bg-surface flex items-center px-6 flex-shrink-0 z-20">
+    <div class="mono font-bold flex items-center gap-3" style="font-size: 13px; letter-spacing: 0.16em;">
+      <span style="color: #E6B300;">●</span>
+      <span>TRAINING_LOG</span>
+    </div>
+    <div class="view-tabs ml-8">
+      <button class="view-tab active" data-view="calendar">LOG</button>
+      <button class="view-tab" data-view="menu">MENU</button>
+    </div>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2">
+        <span class="label-micro">STREAK</span>
+        <span class="data-cell" id="streak-count">00</span>
+        <span class="label-micro">D</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="label-micro">MONTH</span>
+        <span class="data-cell" id="month-count">00</span>
+        <span class="label-micro">SES</span>
+      </div>
+      <div class="flex items-center gap-2 pl-6 border-l border-borderBase">
+        <button class="nav-btn" id="prev-month">‹</button>
+        <span class="mono" id="month-label" style="font-size: 12px; letter-spacing: 0.12em; min-width: 72px; text-align: center;">----.--</span>
+        <button class="nav-btn" id="next-month">›</button>
+        <button class="btn" id="today-btn" style="margin-left: 8px;">TODAY</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="flex-1 flex overflow-hidden">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-[440px] flex-shrink-0 overflow-y-auto bg-surface border-r border-borderBase" style="box-shadow: 4px 0 24px rgba(0,0,0,0.03);">
+      <div class="px-6 py-8 space-y-6" id="sidebar-content"></div>
+    </aside>
+
+    <!-- CANVAS -->
+    <main class="flex-1 overflow-hidden bg-bg">
+      <!-- VIEW: CALENDAR -->
+      <div id="view-calendar" class="h-full flex flex-col p-8 min-h-0">
+        <div class="flex items-end justify-between mb-6 flex-shrink-0">
+          <div>
+            <div class="label-micro mb-1">MONTHLY_MATRIX</div>
+            <div class="title-page" id="month-title-full">---- / ---</div>
+          </div>
+          <div class="flex items-center gap-3 label-micro flex-wrap justify-end">
+            <span class="flex items-center gap-1"><span class="marker push"></span>PUSH</span>
+            <span class="flex items-center gap-1"><span class="marker pull"></span>PULL</span>
+            <span class="flex items-center gap-1"><span class="marker upper"></span>UPPER</span>
+            <span class="flex items-center gap-1"><span class="marker lower"></span>LOWER</span>
+            <span class="flex items-center gap-1"><span class="marker core"></span>CORE</span>
+            <span class="flex items-center gap-1"><span class="marker prep"></span>PREP</span>
+            <span class="flex items-center gap-1"><span class="marker vb"></span>VB</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-7 gap-px mb-px flex-shrink-0">
+          <div class="label-micro text-center py-2">MON</div>
+          <div class="label-micro text-center py-2">TUE</div>
+          <div class="label-micro text-center py-2">WED</div>
+          <div class="label-micro text-center py-2">THU</div>
+          <div class="label-micro text-center py-2">FRI</div>
+          <div class="label-micro text-center py-2">SAT</div>
+          <div class="label-micro text-center py-2">SUN</div>
+        </div>
+
+        <div class="flex-1 grid grid-cols-7 gap-px bg-borderL border border-borderBase min-h-0 overflow-hidden"
+             id="calendar-grid"
+             style="grid-auto-rows: 1fr; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+        </div>
+      </div>
+
+      <!-- VIEW: MENU -->
+      <div id="view-menu" class="menu-scroll hidden"></div>
+    </main>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SUPABASE — 雲端持久化（跨設備同步）
+// ============================================================
+const SB_URL = 'https://hhlwravnopwcwizvdfej.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhobHdyYXZub3B3Y3dpenZkZmVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMDkwNjYsImV4cCI6MjA5MjY4NTA2Nn0.nlJWhF-uK0wyVY-Ngo-iBTr56QQqEf0E6fWiKraP9K4';
+
+async function sbFetch(path, opts = {}) {
+  const headers = {
+    'apikey': SB_KEY,
+    'Authorization': `Bearer ${SB_KEY}`,
+    'Content-Type': 'application/json',
+    ...(opts.headers || {}),
+  };
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, { ...opts, headers });
+  if (!res.ok) throw new Error(`SB ${res.status}: ${await res.text()}`);
+  if (res.status === 204) return null;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function sbUpsert(table, body) {
+  return sbFetch(table, {
+    method: 'POST',
+    headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(body),
+  });
+}
+
+// ============================================================
+// DEFAULT CONFIG — 唯一真相來源，可被 Supabase / localStorage 覆蓋
+// ============================================================
+const DEFAULT_CONFIG = {
+  meta: {
+    title: 'WEEKLY_MENU',
+    subtitle: '上半身 / 下半身 / 排球專項 × 2 · 後側肌群優先',
+  },
+  weekPattern: [
+    { wd: 'MON', split: 'upper' },
+    { wd: 'TUE', split: 'lower' },
+    { wd: 'WED', split: 'vb' },
+    { wd: 'THU', split: 'upper' },
+    { wd: 'FRI', split: 'lower' },
+    { wd: 'SAT', split: 'vb' },
+    { wd: 'SUN', split: 'rest' },
+  ],
+  // 顯示順序（chips、markers、menu cards）
+  splitOrder: ['upper', 'lower', 'core', 'prep'],
+  splits: {
+    upper: {
+      cn: '上半身', en: 'UPPER', color: '#4A6B8C',
+      type: 'main', freq: '×2 / WEEK',
+      exercises: [
+        { id: 'lat_pulldown',          cn: '高位下拉',       en: 'Lat Pulldown',          scheme: '4 × 8–10' },
+        { id: 'seated_cable_row',      cn: '坐姿繩索划船',   en: 'Seated Cable Row',      scheme: '3 × 10–12' },
+        { id: 'machine_row',           cn: '機械划船',       en: 'Machine Row',           scheme: '3 × 10',    note: '專注夾肩胛' },
+        { id: 'reverse_pec_deck',      cn: '反向飛鳥',       en: 'Reverse Pec Deck',      scheme: '3 × 15' },
+        { id: 'face_pull',             cn: '繩索面拉',       en: 'Face Pull',             scheme: '3 × 15' },
+        { id: 'cable_fly',             cn: '繩索夾胸',       en: 'Cable Fly',             scheme: '3 × 12' },
+        { id: 'machine_lateral_raise', cn: '機械側平舉',     en: 'Machine Lateral Raise', scheme: '4 × 12–15' },
+        { id: 'rope_triceps_pushdown', cn: '繩索三頭下壓',   en: 'Rope Triceps Pushdown', scheme: '3 × 12' },
+      ],
+    },
+    lower: {
+      cn: '下半身', en: 'LOWER', color: '#D35400',
+      type: 'main', freq: '×2 / WEEK',
+      exercises: [
+        { id: 'back_squat',            cn: '槓鈴深蹲',       en: 'Back Squat',            scheme: '4 × 6–8' },
+        { id: 'smith_deadlift',        cn: '史密斯機硬拉',   en: 'Smith Machine Deadlift',scheme: '3 × 8–10' },
+        { id: 'leg_extension',         cn: '坐姿腿伸',       en: 'Leg Extension',         scheme: '3 × 12' },
+        { id: 'leg_curl',              cn: '坐姿腿彎舉',     en: 'Leg Curl',              scheme: '3 × 12' },
+        { id: 'standing_calf_raise',   cn: '站姿提踵',       en: 'Standing Calf Raise',   scheme: '4 × 12–15', note: '腳踝剛性' },
+        { id: 'bulgarian_split_squat', cn: '保加利亞分腿蹲', en: 'Bulgarian Split Squat', scheme: '3 × 10',    skip: true },
+      ],
+    },
+    core: {
+      cn: '核心', en: 'CORE', color: '#7A756C',
+      type: 'aux', hint: '下半身日收尾 · 每週 1–2 次',
+      exercises: [
+        { id: 'ab_wheel_rollout', cn: '健腹輪',   en: 'Ab Wheel Rollout', scheme: '3 × 10' },
+        { id: 'torso_rotation',   cn: '機械轉體', en: 'Torso Rotation',   scheme: '3 × 12' },
+        { id: 'back_extension',   cn: '背部伸展', en: 'Back Extension',   scheme: '3 × 12' },
+      ],
+    },
+    prep: {
+      cn: '肩胛 / 啟動', en: 'PREP', color: '#2A2520',
+      type: 'prep', hint: '上半身日主項前執行',
+      dashed: true,
+      exercises: [
+        { id: 'external_rotation', cn: '肩外旋',      en: 'External Rotation', scheme: '2 × 15', note: '上半身日' },
+        { id: 'serratus_punch',    cn: '前鋸肌推',    en: 'Serratus Punch',    scheme: '2 × 12', note: '上半身日' },
+        { id: 'ytw_raise',         cn: 'YTW 肩胛訓練', en: 'YTW Raise',         scheme: '2 × 12', note: '上半身日' },
+      ],
+    },
+  },
+};
+
+
+// ============================================================
+// STATE
+// ============================================================
+const STORAGE_KEY_V2 = 'physics_lab_training_log_v2';
+const STORAGE_KEY_V1 = 'physics_lab_training_log_v1';
+const CONFIG_STORAGE_KEY = 'physics_lab_config_v1';
+const MENU_STORAGE_KEY   = 'physics_lab_menu_v2';
+
+const state = {
+  view: new Date(),
+  selected: ymd(new Date()),
+  view_mode: 'calendar',
+  edit_mode: false,
+  logs: {},
+  config: null, // 從 CONFIG_STORAGE_KEY 載入，fallback DEFAULT_CONFIG
+  menu: null,   // { [splitKey]: [{sets,reps},...] }
+};
+
+// ---- helpers ----
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+function getPrepIds() {
+  const ids = new Set();
+  for (const s of Object.values(state.config.splits)) {
+    if (s.type === 'prep') s.exercises.forEach(e => ids.add(e.id));
+  }
+  return ids;
+}
+
+function injectSplitStyles() {
+  let el = document.getElementById('split-styles');
+  if (!el) { el = document.createElement('style'); el.id = 'split-styles'; document.head.appendChild(el); }
+  el.textContent = state.config.splitOrder.flatMap(key => {
+    const s = state.config.splits[key];
+    if (!s) return [];
+    const marker = s.dashed
+      ? `.marker.${key}{background:transparent;border:1px dashed ${s.color};}`
+      : `.marker.${key}{background:${s.color};}`;
+    const cardBar = s.dashed
+      ? `.menu-card-bar.${key}{background:transparent;border-top:2px dashed ${s.color};height:0;}`
+      : `.menu-card-bar.${key}{background:${s.color};}`;
+    return [
+      marker,
+      `.chip.active.${key}{background:${s.color};}`,
+      cardBar,
+      `.menu-day-bar.${key}{background:${s.color};}`,
+    ];
+  }).join('');
+}
+
+// ---- config (Supabase + localStorage cache) ----
+async function loadConfig() {
+  try {
+    const rows = await sbFetch('settings?key=eq.config&select=value');
+    if (rows?.[0]?.value) {
+      state.config = rows[0].value;
+      try { localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(state.config)); } catch {}
+      return;
+    }
+  } catch (e) { console.warn('SB loadConfig:', e.message); }
+  // fallback: localStorage → DEFAULT_CONFIG
+  try {
+    const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
+    if (raw) { state.config = JSON.parse(raw); return; }
+  } catch {}
+  state.config = deepClone(DEFAULT_CONFIG);
+}
+
+function saveConfig() {
+  try { localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(state.config)); } catch {}
+  sbUpsert('settings', { key: 'config', value: state.config })
+    .catch(e => console.warn('SB saveConfig:', e.message));
+}
+
+function resetConfig() {
+  state.config = deepClone(DEFAULT_CONFIG);
+  saveConfig();
+  state.menu = defaultMenuState();
+  saveMenu();
+  injectSplitStyles();
+  renderMenu();
+}
+
+// ---- menu (intensity overrides) ----
+function parseScheme(str) {
+  const m = String(str || '').match(/(\d+)\s*[×xX]\s*(.+)/);
+  if (m) return { sets: parseInt(m[1]), reps: m[2].trim() };
+  return { sets: 3, reps: '10' };
+}
+
+function defaultMenuState() {
+  const result = {};
+  for (const [key, split] of Object.entries(state.config.splits)) {
+    result[key] = split.exercises.map(ex => parseScheme(ex.scheme));
+  }
+  return result;
+}
+
+async function loadMenu() {
+  const reconcile = (stored) => {
+    const defaults = defaultMenuState();
+    for (const key of Object.keys(defaults)) {
+      if (!Array.isArray(stored[key])) stored[key] = defaults[key];
+      else {
+        while (stored[key].length < defaults[key].length)
+          stored[key].push(defaults[key][stored[key].length]);
+        stored[key].length = defaults[key].length;
+      }
+    }
+    return stored;
+  };
+  try {
+    const rows = await sbFetch('settings?key=eq.menu&select=value');
+    if (rows?.[0]?.value) {
+      state.menu = reconcile(rows[0].value);
+      try { localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(state.menu)); } catch {}
+      return;
+    }
+  } catch (e) { console.warn('SB loadMenu:', e.message); }
+  try {
+    const raw = localStorage.getItem(MENU_STORAGE_KEY);
+    if (raw) { state.menu = reconcile(JSON.parse(raw)); return; }
+  } catch {}
+  state.menu = defaultMenuState();
+}
+
+function saveMenu() {
+  try { localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(state.menu)); } catch {}
+  sbUpsert('settings', { key: 'menu', value: state.menu })
+    .catch(e => console.warn('SB saveMenu:', e.message));
+}
+
+function updateMenuField(group, idx, field, value) {
+  if (!state.menu[group]?.[idx]) return;
+  if (field === 'sets') state.menu[group][idx].sets = Math.max(1, Math.min(20, Number(value) || 1));
+  else state.menu[group][idx].reps = String(value).trim();
+  saveMenu();
+}
+
+function resetMenu() {
+  state.menu = defaultMenuState();
+  saveMenu();
+  renderMenu();
+}
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+function ymd(d) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function parseYmd(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function genId() {
+  return 'b' + Math.random().toString(36).slice(2, 9);
+}
+
+function blockMinutes(b) {
+  if (!b.start || !b.end) return 0;
+  const [sh, sm] = b.start.split(':').map(Number);
+  const [eh, em] = b.end.split(':').map(Number);
+  let mins = (eh * 60 + em) - (sh * 60 + sm);
+  if (mins < 0) mins += 24 * 60;
+  return mins;
+}
+function fmtDuration(mins) {
+  if (!mins || mins < 0) return '0:00';
+  return `${Math.floor(mins / 60)}:${pad2(mins % 60)}`;
+}
+
+function newBlock(type) {
+  const now = new Date();
+  const roundedMin = Math.floor(now.getMinutes() / 30) * 30;
+  const startDt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), roundedMin);
+  const endDt = new Date(startDt.getTime() + 90 * 60 * 1000);
+  const start = `${pad2(startDt.getHours())}:${pad2(startDt.getMinutes())}`;
+  const end   = `${pad2(endDt.getHours())}:${pad2(endDt.getMinutes())}`;
+  const base = { id: genId(), type, start, end, collapsed: false, note: '' };
+  if (type === 'lift') return { ...base, splits: [], sets: {} };
+  if (type === 'volleyball') return { ...base };
+  return base;
+}
+
+function blockHasData(b) {
+  if (!b) return false;
+  if (b.start || b.end) return true;
+  if (b.type === 'lift') {
+    if (b.splits?.length) return true;
+    if (b.sets && Object.values(b.sets).some(s => s?.length)) return true;
+  }
+  if (b.note?.trim()) return true;
+  return false;
+}
+
+function dayHasData(d) {
+  return !!(d && d.blocks && d.blocks.some(blockHasData));
+}
+
+function sortBlocks(blocks) {
+  return blocks.sort((a, b) => {
+    if (!a.start && !b.start) return 0;
+    if (!a.start) return 1;
+    if (!b.start) return -1;
+    return a.start.localeCompare(b.start);
+  });
+}
+
+function findBlock(day, id) {
+  return day.blocks?.find(b => b.id === id);
+}
+
+function migrateFromV1(logs) {
+  const result = {};
+  for (const [date, old] of Object.entries(logs || {})) {
+    const block = {
+      id: genId(),
+      type: 'lift',
+      start: '', end: '',
+      collapsed: false,
+      splits: old.splits || [],
+      sets: old.sets || {},
+      note: old.note || '',
+    };
+    if (blockHasData(block)) result[date] = { blocks: [block] };
+  }
+  return result;
+}
+
+async function load() {
+  let sbRows = null;
+  try {
+    sbRows = await sbFetch('logs?select=date,blocks');
+  } catch (e) { console.warn('SB load logs:', e.message); }
+
+  if (sbRows && sbRows.length > 0) {
+    // Supabase 有資料 → 用雲端版本
+    state.logs = {};
+    for (const r of sbRows) state.logs[r.date] = { blocks: r.blocks || [] };
+  } else {
+    // Supabase 空 → 從 localStorage 載入並 migrate
+    try {
+      const v2 = localStorage.getItem(STORAGE_KEY_V2);
+      if (v2) state.logs = JSON.parse(v2) || {};
+      else {
+        const v1 = localStorage.getItem(STORAGE_KEY_V1);
+        state.logs = v1 ? migrateFromV1(JSON.parse(v1)) : {};
+      }
+    } catch { state.logs = {}; }
+
+    // 把本地資料推上雲端（首次部署會發生）
+    if (sbRows !== null && Object.keys(state.logs).length > 0) {
+      const rows = Object.entries(state.logs)
+        .filter(([_, d]) => d?.blocks?.length)
+        .map(([date, d]) => ({ date, blocks: d.blocks }));
+      if (rows.length) {
+        try {
+          await sbUpsert('logs', rows);
+          console.log(`Migrated ${rows.length} days to Supabase`);
+        } catch (e) { console.warn('Migration failed:', e.message); }
+      }
+    }
+  }
+  try { localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state.logs)); } catch {}
+}
+
+function cleanEmpty() {
+  for (const k in state.logs) {
+    const day = state.logs[k];
+    if (!day || !Array.isArray(day.blocks)) { delete state.logs[k]; continue; }
+    day.blocks = day.blocks.filter(blockHasData);
+    if (day.blocks.length === 0) delete state.logs[k];
+  }
+}
+
+let _sbDirty = new Set();
+let _sbTimer = null;
+
+async function _sbFlush() {
+  const dates = [..._sbDirty];
+  _sbDirty.clear();
+  for (const date of dates) {
+    const day = state.logs[date];
+    try {
+      if (!day || !day.blocks?.length) {
+        await sbFetch(`logs?date=eq.${date}`, { method: 'DELETE' });
+      } else {
+        await sbUpsert('logs', { date, blocks: day.blocks, updated_at: new Date().toISOString() });
+      }
+    } catch (e) {
+      console.warn(`SB save ${date}:`, e.message);
+      _sbDirty.add(date); // retry next flush
+    }
+  }
+}
+
+function save() {
+  // 假設改動發生在 state.selected（所有 sidebar 事件都針對選中日）
+  _sbDirty.add(state.selected);
+  cleanEmpty();
+  try { localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(state.logs)); } catch {}
+  clearTimeout(_sbTimer);
+  _sbTimer = setTimeout(_sbFlush, 1200);
+}
+
+function ensureDay(date) {
+  if (!state.logs[date]) state.logs[date] = { blocks: [] };
+  if (!state.logs[date].blocks) state.logs[date].blocks = [];
+  return state.logs[date];
+}
+function readDay(date) {
+  return state.logs[date] || { blocks: [] };
+}
+
+// ============================================================
+// CALENDAR
+// ============================================================
+const MONTH_NAMES = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+
+function renderCalendar() {
+  const grid = document.getElementById('calendar-grid');
+  const y = state.view.getFullYear();
+  const m = state.view.getMonth();
+
+  document.getElementById('month-label').textContent = `${y}.${String(m + 1).padStart(2, '0')}`;
+  document.getElementById('month-title-full').textContent = `${y} / ${MONTH_NAMES[m]}`;
+
+  const first = new Date(y, m, 1);
+  const firstWd = (first.getDay() + 6) % 7; // Mon=0
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  const cells = [];
+  for (let i = firstWd - 1; i >= 0; i--) {
+    cells.push({ date: new Date(y, m, -i), other: true });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ date: new Date(y, m, d), other: false });
+  }
+  while (cells.length < 42) {
+    const last = cells[cells.length - 1].date;
+    cells.push({
+      date: new Date(last.getFullYear(), last.getMonth(), last.getDate() + 1),
+      other: true,
+    });
+  }
+
+  const todayStr = ymd(new Date());
+  grid.innerHTML = cells.map(c => {
+    const dStr = ymd(c.date);
+    const day = state.logs[dStr];
+    const isToday = dStr === todayStr;
+    const isSelected = dStr === state.selected;
+
+    const markers = collectCellMarkers(day);
+    const blocks = day?.blocks || [];
+    const totalMin = blocks.reduce((a, b) => a + blockMinutes(b), 0);
+    const blockCount = blocks.length;
+
+    let foot = '';
+    if (blockCount) {
+      foot = totalMin > 0
+        ? `${blockCount}BLK · ${fmtDuration(totalMin)}`
+        : `${blockCount}BLK`;
+    }
+
+    const markerHtml = markers.map(m => `<span class="marker ${m}"></span>`).join('');
+
+    return `
+      <div class="cal-cell ${c.other ? 'other-month' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" data-date="${dStr}">
+        <div class="flex items-start justify-between gap-1">
+          <span class="day-num">${c.date.getDate()}</span>
+          <div class="flex gap-1 flex-wrap justify-end">${markerHtml}</div>
+        </div>
+        <div style="position: absolute; left: 12px; right: 12px; bottom: 8px;">
+          ${foot ? `<div class="label-micro" style="font-size: 9px;">${foot}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  grid.querySelectorAll('.cal-cell').forEach(el => {
+    el.addEventListener('click', () => {
+      const d = parseYmd(el.dataset.date);
+      state.selected = el.dataset.date;
+      if (d.getMonth() !== state.view.getMonth() || d.getFullYear() !== state.view.getFullYear()) {
+        state.view = new Date(d.getFullYear(), d.getMonth(), 1);
+      }
+      renderAll();
+    });
+  });
+
+  updateStats();
+}
+
+function collectCellMarkers(day) {
+  if (!day || !day.blocks) return [];
+  const seen = new Set();
+  const markers = [];
+  const order = [...state.config.splitOrder, 'vb'];
+  for (const b of day.blocks) {
+    if (b.type === 'lift') {
+      for (const s of b.splits || []) {
+        if (!seen.has(s)) { seen.add(s); markers.push(s); }
+      }
+    } else if (b.type === 'volleyball') {
+      if (!seen.has('vb')) { seen.add('vb'); markers.push('vb'); }
+    }
+  }
+  markers.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  return markers;
+}
+
+function updateStats() {
+  const y = state.view.getFullYear();
+  const m = state.view.getMonth();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  let count = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    if (dayHasData(state.logs[ymd(new Date(y, m, d))])) count++;
+  }
+  document.getElementById('month-count').textContent = String(count).padStart(2, '0');
+  document.getElementById('streak-count').textContent = String(computeStreak()).padStart(2, '0');
+}
+
+function computeStreak() {
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i < 400; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    const day = state.logs[ymd(d)];
+    if (dayHasData(day)) {
+      streak++;
+    } else {
+      if (i === 0) continue;
+      break;
+    }
+  }
+  return streak;
+}
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+const WEEKDAY_EN = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const WEEKDAY_CN = ['日','一','二','三','四','五','六'];
+
+function renderSidebar() {
+  const host = document.getElementById('sidebar-content');
+  const dStr = state.selected;
+  const d = parseYmd(dStr);
+  const day = readDay(dStr);
+  sortBlocks(day.blocks || []);
+
+  const totals = computeDayTotals(day);
+
+  const blocksHtml = (day.blocks && day.blocks.length)
+    ? day.blocks.map(b => renderBlock(b, dStr)).join('<div class="h-4"></div>')
+    : `<div class="ui-card p-8 text-center">
+         <div class="label-micro mb-2">EMPTY_DAY</div>
+         <div class="body-text" style="color:#7A756C;">尚無 block · 點下方新增</div>
+       </div>`;
+
+  host.innerHTML = `
+    <div class="flex items-end justify-between">
+      <div>
+        <div class="label-micro mb-2">DATE · ${WEEKDAY_EN[d.getDay()]}</div>
+        <div class="title-page mono" style="font-size:26px;">${d.getFullYear()}.${pad2(d.getMonth()+1)}.${pad2(d.getDate())}</div>
+        <div class="label-dev" style="color:#7A756C; margin-top:4px;">星期${WEEKDAY_CN[d.getDay()]}</div>
+      </div>
+      ${dayHasData(day) ? '<button class="btn btn-ghost" id="clear-day">CLEAR DAY</button>' : ''}
+    </div>
+
+    <div>${blocksHtml}</div>
+
+    <div class="grid grid-cols-2 gap-2">
+      <button class="add-block-btn" data-add-block="lift">+ LIFT · 重訓</button>
+      <button class="add-block-btn" data-add-block="volleyball">+ VOLLEYBALL · 排球</button>
+    </div>
+
+    ${dayHasData(day) ? renderDayTotals(totals) : ''}
+  `;
+
+  bindSidebarEvents(dStr, host);
+}
+
+function computeDayTotals(day) {
+  const blocks = day.blocks || [];
+  let activeMin = 0, vbMin = 0;
+  let mainSets = 0, prepSets = 0, volume = 0;
+  for (const b of blocks) {
+    const mins = blockMinutes(b);
+    activeMin += mins;
+    if (b.type === 'volleyball') vbMin += mins;
+    if (b.type === 'lift') {
+      for (const [id, sets] of Object.entries(b.sets || {})) {
+        if (getPrepIds().has(id)) prepSets += sets.length;
+        else {
+          mainSets += sets.length;
+          for (const s of sets) volume += (s.weight || 0) * (s.reps || 0);
+        }
+      }
+    }
+  }
+  return { blockCount: blocks.length, activeMin, vbMin, mainSets, prepSets, volume };
+}
+
+function renderDayTotals(t) {
+  return `
+    <div class="ui-card p-5">
+      <div class="flex items-baseline justify-between mb-4">
+        <div class="title-card" style="color:#7A756C;">DAY_TOTALS</div>
+        <div class="label-micro" style="font-size:9px;">VOL 不計 PREP</div>
+      </div>
+      <div class="grid grid-cols-4 gap-px bg-borderL" style="border:1px solid #DBD6CD; border-radius:2px;">
+        <div class="bg-surface py-4 px-2 text-center">
+          <div class="label-micro mb-1" style="font-size:9px;">BLOCKS</div>
+          <div class="data-cell" style="font-size:16px;">${pad2(t.blockCount)}</div>
+        </div>
+        <div class="bg-surface py-4 px-2 text-center">
+          <div class="label-micro mb-1" style="font-size:9px;">ACTIVE</div>
+          <div class="data-cell" style="font-size:16px;">${fmtDuration(t.activeMin)}</div>
+        </div>
+        <div class="bg-surface py-4 px-2 text-center">
+          <div class="label-micro mb-1" style="font-size:9px;">VOL·KG</div>
+          <div class="data-cell" style="font-size:16px;">${t.volume.toLocaleString()}</div>
+        </div>
+        <div class="bg-surface py-4 px-2 text-center">
+          <div class="label-micro mb-1" style="font-size:9px;">VB·TIME</div>
+          <div class="data-cell" style="font-size:16px;">${t.vbMin ? fmtDuration(t.vbMin) : '—'}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderBlock(b, dStr) {
+  if (b.type === 'lift') return renderLiftBlock(b, dStr);
+  if (b.type === 'volleyball') return renderVolleyballBlock(b, dStr);
+  return '';
+}
+
+function liftSummary(b) {
+  const splits = b.splits || [];
+  const mainSets = Object.entries(b.sets || {})
+    .filter(([id]) => !getPrepIds().has(id))
+    .reduce((a, [, s]) => a + s.length, 0);
+  if (splits.length === 0 && mainSets === 0) return '尚未設定';
+  const lbl = splits.map(s => state.config.splits[s]?.en).filter(Boolean).join(' · ') || '—';
+  return `${lbl}${mainSets ? ' · ' + mainSets + ' SET' : ''}`;
+}
+
+function vbSummary(b) {
+  const dur = blockMinutes(b);
+  return dur ? fmtDuration(dur) : '排球';
+}
+
+function renderBlockHeader(b, typeLabel, dotColor) {
+  const dur = blockMinutes(b);
+  const summary = b.type === 'lift' ? liftSummary(b) : vbSummary(b);
+  return `
+    <div class="block-header">
+      <div class="block-type-dot" style="background: ${dotColor};"></div>
+      <div class="block-type-label">${typeLabel}</div>
+      <div class="block-summary">${summary}</div>
+      <div class="block-time-row">
+        <input type="time" class="block-time-input" data-time-input="${b.id}|start" value="${b.start || ''}">
+        <span class="block-time-dash">—</span>
+        <input type="time" class="block-time-input" data-time-input="${b.id}|end" value="${b.end || ''}">
+        <span class="block-duration">${fmtDuration(dur)}</span>
+        <button class="block-icon-btn" data-toggle-collapse="${b.id}" title="折疊">${b.collapsed ? '▾' : '▴'}</button>
+        <button class="block-icon-btn del" data-del-block="${b.id}" title="刪除">×</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderLiftBlock(b, dStr) {
+  return `
+    <div class="block-card ${b.collapsed ? 'collapsed' : ''}" data-block-id="${b.id}">
+      ${renderBlockHeader(b, 'LIFT · 重訓', '#C0392B')}
+      ${b.collapsed ? '' : renderLiftBody(b, dStr)}
+    </div>
+  `;
+}
+
+function renderLiftBody(b, dStr) {
+  const splitChips = state.config.splitOrder.map(key => {
+    const s = state.config.splits[key];
+    const active = (b.splits || []).includes(key);
+    return `<button class="chip ${active ? 'active ' + key : ''}" data-lift-split="${b.id}|${key}">${s.en}</button>`;
+  }).join('');
+
+  const exercisesHtml = (b.splits || []).length === 0
+    ? `<div class="body-text text-center py-4" style="color:#7A756C;">選擇訓練分組以展開動作</div>`
+    : b.splits.map(key => {
+        const s = state.config.splits[key];
+        if (!s) return '';
+        return `
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="marker ${key}"></span>
+              <span class="title-card">${s.en}</span>
+              <span class="label-micro" style="letter-spacing: 0.08em;">· ${s.cn}</span>
+            </div>
+            <div class="inset-panel">
+              ${s.exercises.map(ex => {
+                const sets = (b.sets || {})[ex.id] || [];
+                const checked = sets.length > 0;
+                return `
+                  <div class="ex-row ${ex.skip ? 'skipped' : ''}">
+                    <div class="ex-check ${checked ? 'checked' : ''}" data-lift-toggle="${b.id}|${ex.id}"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-baseline gap-2 flex-wrap">
+                        <span class="ex-name" style="font-family:'Noto Sans TC'; font-size:14px; font-weight:400; color:#2A2520;">${ex.cn}</span>
+                        ${ex.skip ? '<span class="label-micro" style="color:#C0392B;">SKIP</span>' : ''}
+                      </div>
+                      <div class="label-micro" style="margin-top:1px;">${ex.en}${ex.note ? ' · ' + ex.note : ''}</div>
+                      ${sets.length ? renderSets(b.id, ex.id, sets) : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('<div class="h-4"></div>');
+
+  return `
+    <div class="block-body">
+      <div class="mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="title-card" style="color:#7A756C;">SPLIT</div>
+          <div class="label-micro">${(b.splits || []).length} / 5</div>
+        </div>
+        <div class="flex flex-wrap gap-2">${splitChips}</div>
+      </div>
+
+      <div class="mb-4">
+        <div class="title-card mb-2" style="color:#7A756C;">EXERCISE_LOG</div>
+        <div class="space-y-2">${exercisesHtml}</div>
+      </div>
+
+      <div>
+        <div class="title-card mb-2" style="color:#7A756C;">BLOCK_NOTE</div>
+        <textarea rows="2" class="block-note-input" data-block-note="${b.id}" placeholder="本 block 筆記">${b.note || ''}</textarea>
+      </div>
+    </div>
+  `;
+}
+
+function renderVolleyballBlock(b, dStr) {
+  return `
+    <div class="block-card ${b.collapsed ? 'collapsed' : ''}" data-block-id="${b.id}">
+      ${renderBlockHeader(b, 'VOLLEYBALL · 排球', '#5E8073')}
+      ${b.collapsed ? '' : `
+        <div class="block-body">
+          <div class="title-card mb-2" style="color:#7A756C;">BLOCK_NOTE</div>
+          <textarea rows="3" class="block-note-input" data-block-note="${b.id}" placeholder="今日球感、戰術、失誤、對手…">${b.note || ''}</textarea>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+// ------------------------------------------------------------
+// EVENTS
+// ------------------------------------------------------------
+function bindSidebarEvents(dStr, host) {
+  const getBlock = (id) => findBlock(ensureDay(dStr), id);
+
+  host.querySelectorAll('[data-add-block]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const day = ensureDay(dStr);
+      day.blocks.push(newBlock(btn.dataset.addBlock));
+      sortBlocks(day.blocks);
+      save(); renderAll();
+    });
+  });
+
+  host.querySelectorAll('[data-del-block]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const day = ensureDay(dStr);
+      const id = btn.dataset.delBlock;
+      day.blocks = day.blocks.filter(b => b.id !== id);
+      save(); renderAll();
+    });
+  });
+
+  host.querySelectorAll('[data-toggle-collapse]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const b = getBlock(btn.dataset.toggleCollapse);
+      if (!b) return;
+      b.collapsed = !b.collapsed;
+      save(); renderAll();
+    });
+  });
+
+  host.querySelectorAll('[data-time-input]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const [id, field] = inp.dataset.timeInput.split('|');
+      const b = getBlock(id);
+      if (!b) return;
+      b[field] = inp.value;
+      sortBlocks(ensureDay(dStr).blocks);
+      save(); renderAll();
+    });
+  });
+
+  host.querySelectorAll('[data-block-note]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const b = getBlock(inp.dataset.blockNote);
+      if (!b) return;
+      b.note = inp.value;
+      save();
+    });
+  });
+
+  host.querySelectorAll('[data-lift-split]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [id, key] = btn.dataset.liftSplit.split('|');
+      const b = getBlock(id);
+      if (!b) return;
+      b.splits = b.splits || [];
+      const i = b.splits.indexOf(key);
+      if (i >= 0) b.splits.splice(i, 1);
+      else b.splits.push(key);
+      save(); renderAll();
+    });
+  });
+
+  host.querySelectorAll('[data-lift-toggle]').forEach(el => {
+    el.addEventListener('click', () => {
+      const [id, exId] = el.dataset.liftToggle.split('|');
+      const b = getBlock(id);
+      if (!b) return;
+      b.sets = b.sets || {};
+      if (!b.sets[exId] || b.sets[exId].length === 0) {
+        b.sets[exId] = [{ weight: 0, reps: 0 }];
+      } else {
+        delete b.sets[exId];
+      }
+      save(); renderAll();
+    });
+  });
+
+  host.querySelectorAll('[data-add-set]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [id, exId] = btn.dataset.addSet.split('|');
+      const b = getBlock(id);
+      if (!b) return;
+      b.sets = b.sets || {};
+      b.sets[exId] = b.sets[exId] || [];
+      const last = b.sets[exId][b.sets[exId].length - 1] || { weight: 0, reps: 0 };
+      b.sets[exId].push({ weight: last.weight, reps: last.reps });
+      save(); renderAll();
+    });
+  });
+
+  host.querySelectorAll('[data-remove-set]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [id, exId, idx] = btn.dataset.removeSet.split('|');
+      const b = getBlock(id);
+      if (!b) return;
+      b.sets[exId].splice(Number(idx), 1);
+      if (!b.sets[exId].length) delete b.sets[exId];
+      save(); renderAll();
+    });
+  });
+
+  host.querySelectorAll('[data-set-input]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const [id, exId, idx, field] = inp.dataset.setInput.split('|');
+      const b = getBlock(id);
+      if (!b) return;
+      b.sets[exId][Number(idx)][field] = Number(inp.value) || 0;
+      save();
+      renderCalendar();
+    });
+  });
+
+  const clearBtn = document.getElementById('clear-day');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      delete state.logs[dStr];
+      save(); renderAll();
+    });
+  }
+}
+
+function renderSets(blockId, exId, sets) {
+  return `
+    <div style="margin-top:12px;">
+      <div class="grid gap-2 label-micro" style="grid-template-columns: 24px 1fr 1fr 28px; padding-bottom:6px;">
+        <span>#</span><span>KG</span><span>REPS</span><span></span>
+      </div>
+      <div class="space-y-1">
+      ${sets.map((s, i) => `
+        <div class="grid gap-2 items-center" style="grid-template-columns: 24px 1fr 1fr 28px;">
+          <span class="mono" style="font-size:11px; color:#7A756C;">${pad2(i+1)}</span>
+          <input type="number" data-set-input="${blockId}|${exId}|${i}|weight" value="${s.weight}" step="2.5" min="0">
+          <input type="number" data-set-input="${blockId}|${exId}|${i}|reps" value="${s.reps}" step="1" min="0">
+          <button class="btn btn-ghost" data-remove-set="${blockId}|${exId}|${i}" style="padding:2px; font-size:14px;">×</button>
+        </div>
+      `).join('')}
+      </div>
+      <button class="btn" data-add-set="${blockId}|${exId}" style="width:100%; margin-top:8px;">+ ADD SET</button>
+    </div>
+  `;
+}
+
+// ============================================================
+// RENDER + INIT
+// ============================================================
+function renderAll() {
+  renderCalendar();
+  renderSidebar();
+}
+
+// ============================================================
+// MENU VIEW
+// ============================================================
+// ============================================================
+// MENU VIEW
+// ============================================================
+function renderMenu() {
+  const host = document.getElementById('view-menu');
+  if (!host) return;
+  if (state.edit_mode) { renderEditor(host); return; }
+
+  const cfg = state.config;
+
+  const patternHtml = cfg.weekPattern.map(d => {
+    if (d.split === 'rest') return `
+      <div class="menu-day rest">
+        <div class="menu-day-wd">${d.wd}</div>
+        <div class="menu-day-split">REST</div>
+        <div class="menu-day-bar"></div>
+      </div>`;
+    if (d.split === 'vb') return `
+      <div class="menu-day">
+        <div class="menu-day-wd">${d.wd}</div>
+        <div class="menu-day-split">VB</div>
+        <div class="menu-day-bar marker vb"></div>
+      </div>`;
+    const s = cfg.splits[d.split];
+    if (!s) return '';
+    return `
+      <div class="menu-day">
+        <div class="menu-day-wd">${d.wd}</div>
+        <div class="menu-day-split">${s.en}</div>
+        <div class="menu-day-bar ${d.split}"></div>
+      </div>`;
+  }).join('');
+
+  const schemeEditHtml = (group, i) => {
+    const s = state.menu?.[group]?.[i] || { sets: 3, reps: '10' };
+    return `
+      <div class="menu-ex-scheme">
+        <input type="number" class="menu-scheme-sets" value="${s.sets}" min="1" max="20" data-menu-field="${group}|${i}|sets">
+        <span class="menu-scheme-x">×</span>
+        <input type="text" class="menu-scheme-reps" value="${s.reps}" maxlength="8" data-menu-field="${group}|${i}|reps">
+      </div>`;
+  };
+
+  const splitCardHtml = (key, s) => `
+    <div class="menu-card">
+      <div class="menu-card-head">
+        <div class="menu-card-bar ${key}"></div>
+        <div class="flex items-start justify-between mb-2">
+          <div>
+            <div class="menu-card-label">${s.type === 'prep' ? 'ACTIVATION' : s.type === 'aux' ? 'STABILITY' : 'SPLIT'}</div>
+            <div>
+              <span class="menu-card-title">${s.en}</span>
+              <span class="menu-card-cn">${s.cn}</span>
+            </div>
+          </div>
+          <div class="menu-card-freq">${s.freq || s.hint || ''}</div>
+        </div>
+      </div>
+      <div class="menu-card-body">
+        ${s.exercises.map((ex, i) => `
+          <div class="menu-ex">
+            <div class="menu-ex-num">${pad2(i+1)}</div>
+            <div class="menu-ex-main">
+              <div class="menu-ex-top">
+                <div class="menu-ex-cn">${ex.cn}${ex.skip ? ' <span class="label-micro" style="color:#C0392B;">SKIP</span>' : ''}</div>
+                ${schemeEditHtml(key, i)}
+              </div>
+              <div class="menu-ex-en">${ex.en}${ex.note ? ' · ' + ex.note : ''}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+
+  // derive meta from config
+  const mainSplits = cfg.splitOrder.filter(k => cfg.splits[k]?.type === 'main');
+  const hasVb = cfg.weekPattern.some(d => d.split === 'vb');
+  const schemeVal = [...mainSplits.map(k => cfg.splits[k].en), ...(hasVb ? ['VB'] : [])].join(' / ');
+  const sessions = cfg.weekPattern.filter(d => d.split !== 'rest').length;
+  const rest = cfg.weekPattern.filter(d => d.split === 'rest').length;
+  const metaItems = [
+    { label: 'SCHEME',   value: schemeVal },
+    { label: 'SESSIONS', value: `${sessions} / WEEK` },
+    { label: 'REST',     value: `${rest} / WEEK` },
+  ];
+
+  host.innerHTML = `
+    <div class="menu-wrap">
+      <div class="menu-head">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="label-micro mb-1">${cfg.meta.title}</div>
+            <div class="title-page">週課表 · Weekly Menu</div>
+            <div class="menu-subtitle">${cfg.meta.subtitle}</div>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-ghost" id="menu-edit-btn">EDIT</button>
+            <button class="btn btn-ghost" id="menu-reset">RESET INTENSITY</button>
+          </div>
+        </div>
+        <div class="menu-meta">
+          ${metaItems.map(m => `
+            <div class="menu-meta-item">
+              <div class="menu-meta-label">${m.label}</div>
+              <div class="menu-meta-value">${m.value}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="menu-pattern">${patternHtml}</div>
+
+      <div class="menu-splits">
+        ${cfg.splitOrder.map(key => splitCardHtml(key, cfg.splits[key])).join('')}
+      </div>
+    </div>
+  `;
+
+  host.querySelectorAll('[data-menu-field]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const [group, idx, field] = inp.dataset.menuField.split('|');
+      updateMenuField(group, Number(idx), field, inp.value);
+    });
+  });
+  document.getElementById('menu-reset')?.addEventListener('click', () => {
+    if (confirm('將所有組數 / 次數恢復為預設值？')) resetMenu();
+  });
+  document.getElementById('menu-edit-btn')?.addEventListener('click', () => {
+    state.edit_mode = true; renderMenu();
+  });
+}
+
+// ============================================================
+// CONFIG EDITOR
+// ============================================================
+function renderEditor(host) {
+  const cfg = state.config;
+
+  const splitOptions = (selected) => {
+    const opts = [
+      `<option value="rest" ${selected === 'rest' ? 'selected' : ''}>REST</option>`,
+      `<option value="vb"   ${selected === 'vb'   ? 'selected' : ''}>VB</option>`,
+      ...cfg.splitOrder.map(k =>
+        `<option value="${k}" ${selected === k ? 'selected' : ''}>${cfg.splits[k].en}</option>`
+      ),
+    ];
+    return opts.join('');
+  };
+
+  const patternHtml = `
+    <div class="editor-section">
+      <div class="editor-section-title">Weekly Pattern</div>
+      <div class="editor-pattern-grid">
+        ${cfg.weekPattern.map((d, i) => `
+          <div>
+            <div class="editor-day-label">${d.wd}</div>
+            <select class="editor-day-select" data-pattern-idx="${i}">${splitOptions(d.split)}</select>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+
+  const exRowHtml = (key, ex, ei) => `
+    <div class="editor-ex-row" data-split="${key}" data-ex-idx="${ei}">
+      <div class="editor-ex-num">${pad2(ei+1)}</div>
+      <div class="editor-ex-fields">
+        <div class="editor-ex-row-top">
+          <input class="editor-ex-input" type="text" value="${ex.cn}" placeholder="中文名" data-ex-field="${key}|${ei}|cn">
+          <input class="editor-ex-scheme-input" type="text" value="${ex.scheme || ''}" placeholder="3×10" data-ex-field="${key}|${ei}|scheme">
+        </div>
+        <div class="editor-ex-row-bot">
+          <input class="editor-ex-en-input" type="text" value="${ex.en}" placeholder="English name" data-ex-field="${key}|${ei}|en">
+        </div>
+      </div>
+      <button class="editor-skip-toggle ${ex.skip ? 'on' : ''}" data-ex-skip="${key}|${ei}">${ex.skip ? 'SKIP' : 'skip'}</button>
+      <button class="editor-del-ex" data-del-ex="${key}|${ei}">×</button>
+    </div>`;
+
+  const splitCardHtml = (key) => {
+    const s = cfg.splits[key];
+    return `
+      <div class="editor-split-card" data-split-key="${key}">
+        <div class="editor-split-head">
+          <div class="editor-color-swatch" style="background:${s.color};" data-color-swatch="${key}" title="點擊改色"></div>
+          <input type="color" class="color-picker-input" id="color-picker-${key}" value="${s.color}" data-color-for="${key}">
+          <input class="editor-split-en-input" type="text" value="${s.en}" placeholder="EN" data-split-field="${key}|en">
+          <input class="editor-split-name-input" type="text" value="${s.cn}" placeholder="中文名" data-split-field="${key}|cn">
+          <button class="editor-split-type-badge" data-split-type="${key}">${s.type}</button>
+          <button class="editor-del-split" data-del-split="${key}">REMOVE</button>
+        </div>
+        <div class="editor-ex-list">
+          ${s.exercises.map((ex, ei) => exRowHtml(key, ex, ei)).join('')}
+          <button class="editor-add-ex" data-add-ex="${key}">+ ADD EXERCISE</button>
+        </div>
+      </div>`;
+  };
+
+  host.innerHTML = `
+    <div class="menu-wrap">
+      <div class="menu-head">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="label-micro mb-1">CONFIG_EDITOR</div>
+            <div class="title-page">編輯模式 · Edit Config</div>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-ghost" id="editor-reset-all">RESET ALL DEFAULTS</button>
+            <button class="btn" id="editor-done">DONE</button>
+          </div>
+        </div>
+      </div>
+
+      ${patternHtml}
+
+      <div class="editor-section">
+        <div class="editor-section-title">Splits & Exercises</div>
+        ${cfg.splitOrder.map(splitCardHtml).join('')}
+        <button class="editor-add-split" id="editor-add-split">+ ADD SPLIT</button>
+      </div>
+    </div>
+  `;
+
+  // ---- editor events ----
+
+  // done
+  host.querySelector('#editor-done').addEventListener('click', () => {
+    state.edit_mode = false; renderMenu();
+  });
+
+  // reset all
+  host.querySelector('#editor-reset-all').addEventListener('click', () => {
+    if (confirm('將菜單完全重設為預設值？（不影響訓練日誌）')) resetConfig();
+  });
+
+  // weekly pattern
+  host.querySelectorAll('[data-pattern-idx]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      cfg.weekPattern[Number(sel.dataset.patternIdx)].split = sel.value;
+      saveConfig(); renderMenu();
+    });
+  });
+
+  // split name / en
+  host.querySelectorAll('[data-split-field]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const [key, field] = inp.dataset.splitField.split('|');
+      cfg.splits[key][field] = inp.value;
+      saveConfig();
+    });
+  });
+
+  // split color swatch → open color picker
+  host.querySelectorAll('[data-color-swatch]').forEach(swatch => {
+    swatch.addEventListener('click', () => {
+      document.getElementById(`color-picker-${swatch.dataset.colorSwatch}`)?.click();
+    });
+  });
+  host.querySelectorAll('[data-color-for]').forEach(picker => {
+    picker.addEventListener('input', () => {
+      const key = picker.dataset.colorFor;
+      cfg.splits[key].color = picker.value;
+      host.querySelector(`[data-color-swatch="${key}"]`).style.background = picker.value;
+      saveConfig(); injectSplitStyles();
+    });
+  });
+
+  // split type cycle
+  host.querySelectorAll('[data-split-type]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.splitType;
+      const types = ['main', 'aux', 'prep'];
+      const cur = types.indexOf(cfg.splits[key].type);
+      cfg.splits[key].type = types[(cur + 1) % types.length];
+      saveConfig(); renderMenu();
+    });
+  });
+
+  // delete split
+  host.querySelectorAll('[data-del-split]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.delSplit;
+      if (cfg.splitOrder.length <= 1) return;
+      if (!confirm(`刪除 ${cfg.splits[key].en}？`)) return;
+      delete cfg.splits[key];
+      cfg.splitOrder = cfg.splitOrder.filter(k => k !== key);
+      // remove from weekPattern
+      cfg.weekPattern.forEach(d => { if (d.split === key) d.split = 'rest'; });
+      saveConfig(); injectSplitStyles(); state.menu = defaultMenuState(); saveMenu(); renderMenu();
+    });
+  });
+
+  // exercise fields
+  host.querySelectorAll('[data-ex-field]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const [key, idx, field] = inp.dataset.exField.split('|');
+      cfg.splits[key].exercises[Number(idx)][field] = inp.value;
+      saveConfig();
+      if (field === 'scheme') { state.menu = defaultMenuState(); saveMenu(); }
+    });
+  });
+
+  // skip toggle
+  host.querySelectorAll('[data-ex-skip]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [key, idx] = btn.dataset.exSkip.split('|');
+      const ex = cfg.splits[key].exercises[Number(idx)];
+      ex.skip = !ex.skip;
+      saveConfig(); renderMenu();
+    });
+  });
+
+  // delete exercise
+  host.querySelectorAll('[data-del-ex]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [key, idx] = btn.dataset.delEx.split('|');
+      cfg.splits[key].exercises.splice(Number(idx), 1);
+      saveConfig(); state.menu = defaultMenuState(); saveMenu(); renderMenu();
+    });
+  });
+
+  // add exercise
+  host.querySelectorAll('[data-add-ex]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.addEx;
+      const id = 'ex_' + Math.random().toString(36).slice(2, 8);
+      cfg.splits[key].exercises.push({ id, cn: '新動作', en: 'New Exercise', scheme: '3 × 10' });
+      saveConfig(); state.menu = defaultMenuState(); saveMenu(); renderMenu();
+    });
+  });
+
+  // add split
+  host.querySelector('#editor-add-split').addEventListener('click', () => {
+    const key = 'split_' + Math.random().toString(36).slice(2, 7);
+    cfg.splits[key] = { cn: '新分組', en: 'NEW', color: '#7A756C', type: 'main', freq: '×2 / WEEK', exercises: [] };
+    cfg.splitOrder.push(key);
+    saveConfig(); injectSplitStyles(); state.menu = defaultMenuState(); saveMenu(); renderMenu();
+  });
+}
+
+function setView(mode) {
+  state.view_mode = mode;
+  const sidebar = document.getElementById('sidebar');
+  const calView = document.getElementById('view-calendar');
+  const menuView = document.getElementById('view-menu');
+  const isCal = mode === 'calendar';
+
+  sidebar.classList.toggle('hidden', !isCal);
+  calView.classList.toggle('hidden', !isCal);
+  menuView.classList.toggle('hidden', isCal);
+
+  document.querySelectorAll('.view-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === mode);
+  });
+
+  if (!isCal) renderMenu();
+  else renderAll();
+}
+
+document.getElementById('prev-month').addEventListener('click', () => {
+  state.view = new Date(state.view.getFullYear(), state.view.getMonth() - 1, 1);
+  renderCalendar();
+});
+document.getElementById('next-month').addEventListener('click', () => {
+  state.view = new Date(state.view.getFullYear(), state.view.getMonth() + 1, 1);
+  renderCalendar();
+});
+document.getElementById('today-btn').addEventListener('click', () => {
+  const now = new Date();
+  state.view = new Date(now.getFullYear(), now.getMonth(), 1);
+  state.selected = ymd(now);
+  renderAll();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea')) return;
+  const d = parseYmd(state.selected);
+  let next;
+  if (e.key === 'ArrowLeft')  next = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+  else if (e.key === 'ArrowRight') next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+  else if (e.key === 'ArrowUp')    next = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 7);
+  else if (e.key === 'ArrowDown')  next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7);
+  else return;
+  e.preventDefault();
+  state.selected = ymd(next);
+  if (next.getMonth() !== state.view.getMonth() || next.getFullYear() !== state.view.getFullYear()) {
+    state.view = new Date(next.getFullYear(), next.getMonth(), 1);
+  }
+  renderAll();
+});
+
+document.querySelectorAll('.view-tab').forEach(tab => {
+  tab.addEventListener('click', () => setView(tab.dataset.view));
+});
+
+(async () => {
+  await loadConfig();
+  await loadMenu();
+  injectSplitStyles();
+  await load();
+  renderAll();
+  // 離開頁面時強制 flush 待寫資料
+  window.addEventListener('beforeunload', () => { if (_sbTimer) { clearTimeout(_sbTimer); _sbFlush(); } });
+})();
+</script>
+</body>
+</html>
