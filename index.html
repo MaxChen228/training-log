@@ -608,6 +608,28 @@ tailwind.config = {
   .editor-add-split:hover { border-color: #2A2520; color: #2A2520; }
   .color-picker-input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 
+  /* === LIBRARY VIEW === */
+  .lib-wrap { max-width: 1240px; margin: 0 auto; padding: 32px 32px 80px; }
+  .lib-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  .lib-search { flex: 1 1 320px; min-width: 240px; border: 1px solid #DBD6CD; border-radius: 6px; background: #FCFBFA; padding: 10px 14px; font-family: 'Noto Sans TC', sans-serif; font-size: 14px; color: #2A2520; }
+  .lib-search:focus { outline: none; border-color: #2A2520; }
+  .lib-stat { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; color: #7A756C; }
+  .lib-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .lib-cat { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; padding: 5px 10px; border: 1px solid #DBD6CD; border-radius: 99px; background: transparent; color: #7A756C; cursor: pointer; text-transform: uppercase; }
+  .lib-cat:hover { color: #2A2520; border-color: #7A756C; }
+  .lib-cat.active { color: #FCFBFA; background: #2A2520; border-color: #2A2520; }
+  .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .lib-card { background: #FCFBFA; border: 1px solid #DBD6CD; border-radius: 6px; cursor: pointer; transition: border-color 0.12s, transform 0.12s; overflow: hidden; padding: 0; text-align: left; font: inherit; color: inherit; }
+  .lib-card:hover { border-color: #2A2520; transform: translateY(-1px); }
+  .lib-thumb { width: 100%; aspect-ratio: 4/3; background: #F8F7F4; display: block; object-fit: cover; border-bottom: 1px solid #E8E4DB; }
+  .lib-card-body { padding: 10px 12px 12px; }
+  .lib-card-cn { font-family: 'Noto Sans TC', sans-serif; font-size: 14px; font-weight: 500; color: #2A2520; line-height: 1.3; }
+  .lib-card-en { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: #7A756C; margin-top: 3px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lib-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .lib-card-tag { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.08em; padding: 2px 6px; border-radius: 99px; background: #F4F2ED; color: #7A756C; text-transform: uppercase; }
+  .lib-card-tag.lvl { color: #2A2520; background: #E8E4DB; }
+  .lib-empty { text-align: center; padding: 60px 20px; color: #7A756C; font-family: 'Noto Sans TC', sans-serif; font-size: 14px; }
+
   /* === EXERCISE MODAL === */
   .ex-name-btn { background: transparent; border: none; padding: 0 0 0 0; margin: 0; cursor: pointer; font: inherit; color: inherit; text-align: left; border-bottom: 1px dotted #C0BCB2; transition: border-color 0.12s; display: inline-flex; align-items: center; gap: 4px; }
   .ex-name-btn::after { content: 'ⓘ'; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #B0AAA0; transition: color 0.12s; }
@@ -648,6 +670,7 @@ tailwind.config = {
     <div class="view-tabs ml-8">
       <button class="view-tab active" data-view="calendar">LOG</button>
       <button class="view-tab" data-view="menu">MENU</button>
+      <button class="view-tab" data-view="library">LIBRARY</button>
     </div>
     <div class="flex-1"></div>
     <div class="flex items-center gap-6">
@@ -714,6 +737,9 @@ tailwind.config = {
 
       <!-- VIEW: MENU -->
       <div id="view-menu" class="menu-scroll hidden"></div>
+
+      <!-- VIEW: LIBRARY -->
+      <div id="view-library" class="menu-scroll hidden"></div>
     </main>
   </div>
 </div>
@@ -838,6 +864,7 @@ const state = {
   config: null, // 從 CONFIG_STORAGE_KEY 載入，fallback DEFAULT_CONFIG
   menu: null,   // { [splitKey]: [{sets,reps},...] }
   library: {},  // exercise_library: { [id]: {name_cn, name_en, instructions_cn, instructions_en, image_urls, primary_muscles, equipment, level, category} }
+  libraryFilter: { q: '', category: '' },
 };
 
 // ---- helpers ----
@@ -875,7 +902,7 @@ function injectSplitStyles() {
 // ---- config (Supabase + localStorage cache) ----
 async function loadLibrary() {
   try {
-    const rows = await sbFetch('exercise_library?select=id,name_cn,name_en,instructions_cn,instructions_en,image_urls,primary_muscles,secondary_muscles,equipment,level,category,force,mechanic&order=id');
+    const rows = await sbFetch('exercise_library?select=id,name_cn,name_en,aliases,instructions_cn,instructions_en,image_urls,primary_muscles,secondary_muscles,equipment,level,category,force,mechanic&order=id');
     state.library = Object.fromEntries((rows || []).map(r => [r.id, r]));
     try { localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(state.library)); } catch {}
   } catch (e) {
@@ -885,6 +912,8 @@ async function loadLibrary() {
       if (raw) state.library = JSON.parse(raw);
     } catch {}
   }
+  // 若使用者目前停在 library view，載完即重渲（首次開站場景）
+  if (state.view_mode === 'library') renderLibrary();
 }
 
 async function loadConfig() {
@@ -1660,6 +1689,101 @@ function renderAll() {
 // ============================================================
 // MENU VIEW
 // ============================================================
+// ============================================================
+// LIBRARY VIEW
+// ============================================================
+const LIB_CATEGORIES = [
+  { key: '',                    label: 'ALL'         },
+  { key: 'strength',            label: 'STRENGTH'    },
+  { key: 'stretching',          label: 'STRETCHING'  },
+  { key: 'plyometrics',         label: 'PLYO'        },
+  { key: 'powerlifting',        label: 'POWERLIFT'   },
+  { key: 'olympic weightlifting', label: 'OLYMPIC'   },
+  { key: 'cardio',              label: 'CARDIO'      },
+  { key: 'strongman',           label: 'STRONGMAN'   },
+];
+
+function renderLibrary() {
+  const host = document.getElementById('view-library');
+  const lib = state.library || {};
+  const ids = Object.keys(lib);
+  if (!ids.length) {
+    host.innerHTML = `<div class="lib-wrap"><div class="lib-empty">動作庫載入中… 若持續未顯示，檢查網路或重新整理。</div></div>`;
+    return;
+  }
+
+  const { q, category } = state.libraryFilter;
+  const qLower = q.trim().toLowerCase();
+  const matches = ids
+    .map(id => lib[id])
+    .filter(r => {
+      if (category && r.category !== category) return false;
+      if (!qLower) return true;
+      const hay = [r.name_cn, r.name_en, ...(r.aliases || []), ...(r.primary_muscles || [])].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(qLower);
+    })
+    .sort((a, b) => (a.name_cn || a.name_en || '').localeCompare(b.name_cn || b.name_en || '', 'zh-Hant'));
+
+  const cats = LIB_CATEGORIES.map(c => `
+    <button class="lib-cat ${state.libraryFilter.category === c.key ? 'active' : ''}" data-lib-cat="${c.key}">${c.label}</button>
+  `).join('');
+
+  const cards = matches.length ? matches.map(r => {
+    const img = (r.image_urls || [])[0] || '';
+    const tags = [];
+    if (r.level)     tags.push(`<span class="lib-card-tag lvl">${r.level.toUpperCase()}</span>`);
+    if (r.equipment) tags.push(`<span class="lib-card-tag">${r.equipment.toUpperCase()}</span>`);
+    const muscles = (r.primary_muscles || [])[0];
+    if (muscles)     tags.push(`<span class="lib-card-tag">${muscles.toUpperCase()}</span>`);
+    return `
+      <button class="lib-card" data-ex-info="${r.id}">
+        ${img ? `<img class="lib-thumb" src="${img}" alt="" loading="lazy" onerror="this.style.opacity=0.2;">` : `<div class="lib-thumb"></div>`}
+        <div class="lib-card-body">
+          <div class="lib-card-cn">${r.name_cn || r.name_en}</div>
+          <div class="lib-card-en">${r.name_en || ''}</div>
+          ${tags.length ? `<div class="lib-card-tags">${tags.join('')}</div>` : ''}
+        </div>
+      </button>
+    `;
+  }).join('') : `<div class="lib-empty">沒有符合「${q || '此篩選'}」的動作。</div>`;
+
+  host.innerHTML = `
+    <div class="lib-wrap">
+      <div class="lib-head">
+        <div>
+          <div class="label-micro mb-1">EXERCISE_LIBRARY</div>
+          <div class="title-page">動作庫 · Library</div>
+        </div>
+        <input type="search" class="lib-search" placeholder="搜尋動作名 / 肌群 / 別名…" id="lib-search-input" value="${(q || '').replace(/"/g,'&quot;')}">
+        <div class="lib-stat">${matches.length} / ${ids.length}</div>
+      </div>
+      <div class="lib-cats">${cats}</div>
+      <div class="lib-grid">${cards}</div>
+    </div>
+  `;
+
+  const input = host.querySelector('#lib-search-input');
+  if (input) {
+    let t;
+    input.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        state.libraryFilter.q = input.value;
+        renderLibrary();
+        // refocus & put cursor at end
+        const next = document.getElementById('lib-search-input');
+        if (next) { next.focus(); const len = next.value.length; next.setSelectionRange(len, len); }
+      }, 120);
+    });
+  }
+  host.querySelectorAll('[data-lib-cat]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.libraryFilter.category = btn.dataset.libCat;
+      renderLibrary();
+    });
+  });
+}
+
 function renderMenu() {
   const host = document.getElementById('view-menu');
   if (!host) return;
@@ -2001,17 +2125,19 @@ function setView(mode) {
   const sidebar = document.getElementById('sidebar');
   const calView = document.getElementById('view-calendar');
   const menuView = document.getElementById('view-menu');
-  const isCal = mode === 'calendar';
+  const libView = document.getElementById('view-library');
 
-  sidebar.classList.toggle('hidden', !isCal);
-  calView.classList.toggle('hidden', !isCal);
-  menuView.classList.toggle('hidden', isCal);
+  sidebar.classList.toggle('hidden', mode !== 'calendar');
+  calView.classList.toggle('hidden', mode !== 'calendar');
+  menuView.classList.toggle('hidden', mode !== 'menu');
+  libView.classList.toggle('hidden', mode !== 'library');
 
   document.querySelectorAll('.view-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.view === mode);
   });
 
-  if (!isCal) renderMenu();
+  if (mode === 'menu') renderMenu();
+  else if (mode === 'library') renderLibrary();
   else renderAll();
 }
 
