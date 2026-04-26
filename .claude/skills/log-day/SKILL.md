@@ -37,7 +37,7 @@ PK = `date`（YYYY-MM-DD 字串），其他欄位：
 ```jsonc
 {
   "id": "<隨機字串>",            // crypto.randomUUID() 或 nanoid 風格
-  "type": "lift" | "volleyball" | "meal" | "recovery",
+  "type": "lift" | "volleyball" | "recovery",
   "start": "HH:MM",
   "end":   "HH:MM",
   "collapsed": false,
@@ -67,28 +67,6 @@ PK = `date`（YYYY-MM-DD 字串），其他欄位：
 { ...通用, "type": "volleyball" }
 ```
 （時長從 start/end 推算，無額外 payload）
-
-### type=`meal`（**已上線**，UI 在 sidebar `+ MEAL · 飲食` 按鈕）
-```jsonc
-{
-  ...通用,
-  "type": "meal",
-  "slot": "breakfast" | "lunch" | "dinner" | "snack",
-  "items": [
-    {
-      "name": "白飯",       // 顯示名稱
-      "qty": "1 碗 (220g)", // 自由文字含份量資訊
-      "kcal": 403,
-      "p": 6.8, "f": 0.7, "c": 90.2,
-      "source": "tfnd:A0550601"   // 選填，標記來源
-    }
-  ],
-  "photo_urls": [                    // 注意是 array，不是單一 url
-    "https://hhlwravnopwcwizvdfej.supabase.co/storage/v1/object/public/meal-photos/2026-04-26/b7x9k2-1745... .jpg"
-  ],
-  "ai_inferred": true                // 整個 block 是否由 AI 估算
-}
-```
 
 ### type=`recovery`（規劃中，jsonb shape 預定義；UI 未上線）
 ```jsonc
@@ -161,78 +139,6 @@ curl -s -X POST "$SUPABASE_URL/rest/v1/logs" \
 
 「已寫入 2026-04-26，當日總 blocks: N」。**不要**重述整份 JSON。
 
-## 4.5. 飲食工作流（meal block 專用）
-
-**全部要遵守 Step 2 預覽 → Step 3 讀現有 → Step 4 upsert 的鐵律。**
-
-### A. 純文字描述
-> 「我午餐吃了一碗滷肉飯加一份燙青菜，還喝半杯珍奶」
-
-流程：
-1. **拆元件** — 複合料理拆成原料：
-   - 「滷肉飯 1 碗」≈ 白飯 200g + 滷五花肉 60g + 滷汁
-   - 「燙青菜」≈ 葉菜類 100g + 醬油+蒜
-   - 「半杯珍奶」≈ 珍珠 30g + 奶茶 200ml + 糖
-2. **查 food_library 取每 100g macros**：
-   ```bash
-   curl -s "$SUPABASE_URL/rest/v1/food_library?or=(name_cn.ilike.*白飯*,name_alt.ilike.*白飯*)&select=id,name_cn,kcal,protein_g,fat_g,carb_g,fiber_g&limit=5" \
-     -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY"
-   ```
-   - food_library 共 2,181 筆台灣食藥署 (TFND) 原料，PK 是「整合編號」（如 `A0550601`= 白飯）
-   - 命中後乘以 (份量 g / 100) 得實際 kcal/P/F/C
-3. **找不到的食材**（複合料理通常找不到）→ 你判斷估算，`source` 標 `claude_estimate`
-4. **顯示拆解預覽 + macros 加總**等使用者確認，例：
-   ```
-   午餐 lunch:
-     • 白飯 200g (TFND A0550601):     366 kcal / 6.2P / 0.6F / 82C
-     • 滷五花肉 60g (claude_estimate): 270 kcal / 12P / 24F / 1C
-     • 葉菜類 100g (TFND...):           25 kcal / 2.3P / 0.4F / 4.2C
-     • 珍奶 半杯 250ml (claude_est):   175 kcal / 3P / 5F / 30C
-     ─────────────
-     合計:  836 kcal / 23.5P / 30F / 117.2C
-   確認寫入 2026-04-26 嗎？
-   ```
-
-### B. 拍照（Vision 工作流）
-
-使用者貼食物照片到對話。
-
-1. **直接看圖** — 你（Claude）就是 vision model，不用第三方 API。識別食物 + 估每樣份量（份量誤差最大，給保守值）
-2. **拆元件 + 查 food_library**（同 A）
-3. **顯示預覽 + 信心提示**：「拍照估算誤差約 30-40%，要更準需體重秤稱重」
-4. **照片本身要不要存？**詢問使用者：
-   - 要 → 上傳到 `meal-photos` bucket（已建好，public read，anon 可上傳），存 public URL 到 `photo_urls`
-   - 不要 → `photo_urls` 留空陣列
-   - 上傳：
-     ```bash
-     curl -X POST "$SUPABASE_URL/storage/v1/object/meal-photos/2026-04-26/<id>-<ts>.jpg" \
-       -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-       -H "Content-Type: image/jpeg" -H "x-upsert: true" \
-       --data-binary "@/path/to/photo.jpg"
-     # public URL: $SUPABASE_URL/storage/v1/object/public/meal-photos/<path>
-     ```
-   - 通常使用者直接從手機 app 內按 `+ PHOTO` 上傳更順 — 你只需在對話中辨識營養
-
-### C. Slot 自動推斷
-- 沒指定：早上→breakfast、11-14→lunch、14-17→snack、晚上→dinner
-- 不確定就問
-
-### food_library 查詢 cheatsheet
-
-```bash
-# 模糊搜尋（中文名 OR 俗名）
-curl -s "$SUPABASE_URL/rest/v1/food_library?or=(name_cn.ilike.*雞胸*,name_alt.ilike.*雞胸*)&select=id,name_cn,kcal,protein_g,fat_g,carb_g&limit=10" \
-  -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY"
-
-# 按食品分類（18 類：穀物/魚貝/肉/蔬菜/水果/乳品/油脂/堅果/蛋/豆/糖/飲料/酒/糕餅/加工/調味/嬰幼/其他）
-curl -s "$SUPABASE_URL/rest/v1/food_library?category=eq.魚貝類&select=id,name_cn,kcal&limit=20" ...
-
-# 取微量營養素（jsonb raw 內含 100+ 分析項）
-curl -s "$SUPABASE_URL/rest/v1/food_library?id=eq.A0550601&select=id,name_cn,raw" ...
-```
-
-**精度殘酷事實**：拍照估熱量誤差 30-40%、Vision-only 估蛋白質誤差 >60%。對「日常追蹤」可接受，對「精準增肌減脂」要使用者用體重秤稱原料。**預覽中要誠實提示信心區間**。
-
 ## 5. 編輯既有 block
 
 若使用者說「改一下剛剛那個」「把面拉改成 4 組」：
@@ -256,4 +162,3 @@ curl -s "$SUPABASE_URL/rest/v1/food_library?id=eq.A0550601&select=id,name_cn,raw
 - **id 必填**：blocks 陣列每個元素一定要有唯一 `id`，不要省略
 - **collapsed 預設 false**：app 預期此欄位存在
 - **未知 exerciseId 絕不亂塞**：menu 視圖會根據 ID 查不到而顯示空白
-- **photo_urls（meal block）**：欄位是 array 不是單一 url。bucket `meal-photos` 已建好（public read、anon 可上傳/刪除）。手機 app 內已有 `+ PHOTO` 按鈕走前端上傳；對話流程中如要存圖才走 curl POST 到 storage。

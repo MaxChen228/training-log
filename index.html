@@ -95,7 +95,6 @@ tailwind.config = {
 
   .marker { width: 6px; height: 6px; border-radius: 1px; display: inline-block; flex-shrink: 0; }
   .marker.vb   { background: #5E8073; }
-  .marker.meal { background: #E6B300; }
 
   .chip.active.vb  { background: #5E8073; }
 
@@ -609,33 +608,6 @@ tailwind.config = {
   .editor-add-split:hover { border-color: #2A2520; color: #2A2520; }
   .color-picker-input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 
-  /* === MEAL BLOCK === */
-  .meal-slot-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .meal-slot-chip { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; padding: 5px 10px; border: 1px solid #DBD6CD; border-radius: 99px; background: transparent; color: #7A756C; cursor: pointer; text-transform: uppercase; }
-  .meal-slot-chip.active { color: #FCFBFA; background: #E6B300; border-color: #E6B300; }
-  .meal-photos-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-  .meal-photo { position: relative; width: 64px; height: 64px; border-radius: 4px; overflow: hidden; border: 1px solid #DBD6CD; background: #F8F7F4; }
-  .meal-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .meal-photo-del { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 99px; background: rgba(42,37,32,0.7); color: #FCFBFA; border: none; cursor: pointer; font-size: 11px; line-height: 1; padding: 0; }
-  .meal-photo-add { width: 64px; height: 64px; border: 1px dashed #DBD6CD; border-radius: 4px; background: transparent; color: #7A756C; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; }
-  .meal-photo-add:hover { border-color: #2A2520; color: #2A2520; }
-  .meal-photo-uploading { font-size: 9px; }
-  .meal-items { border: 1px solid #DBD6CD; border-radius: 4px; background: #FCFBFA; }
-  .meal-item-row { display: grid; grid-template-columns: 1.6fr 0.8fr 0.6fr 1.2fr 24px; gap: 8px; align-items: center; padding: 6px 8px; border-bottom: 1px dashed #E8E4DB; }
-  .meal-item-row:last-of-type { border-bottom: none; }
-  .meal-item-input { font-family: 'Noto Sans TC', sans-serif; font-size: 13px; color: #2A2520; background: transparent; border: none; border-bottom: 1px solid transparent; padding: 2px 0; min-width: 0; }
-  .meal-item-input:focus { outline: none; border-bottom-color: #DBD6CD; }
-  .meal-item-input.numeric { font-family: 'JetBrains Mono', monospace; text-align: right; }
-  .meal-item-pfc { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #7A756C; letter-spacing: 0.04em; }
-  .meal-item-del { color: #C0392B; background: transparent; border: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
-  .meal-add-item { display: block; width: 100%; padding: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #7A756C; background: transparent; border: none; border-top: 1px dashed #DBD6CD; cursor: pointer; text-transform: uppercase; }
-  .meal-add-item:hover { color: #2A2520; }
-  .meal-totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
-  .meal-total-cell { background: #F8F7F4; border-radius: 4px; padding: 8px 6px; text-align: center; }
-  .meal-total-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.12em; color: #7A756C; }
-  .meal-total-value { font-family: 'JetBrains Mono', monospace; font-size: 16px; color: #2A2520; margin-top: 2px; }
-  .meal-ai-hint { font-family: 'Noto Sans TC', sans-serif; font-size: 11px; color: #E6B300; padding: 6px 0 0; letter-spacing: 0.04em; }
-
   /* === EXERCISE MODAL === */
   .ex-name-btn { background: transparent; border: none; padding: 0 0 0 0; margin: 0; cursor: pointer; font: inherit; color: inherit; text-align: left; border-bottom: 1px dotted #C0BCB2; transition: border-color 0.12s; display: inline-flex; align-items: center; gap: 4px; }
   .ex-name-btn::after { content: 'ⓘ'; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #B0AAA0; transition: color 0.12s; }
@@ -1045,16 +1017,7 @@ function newBlock(type) {
   const base = { id: genId(), type, start, end, collapsed: false, note: '' };
   if (type === 'lift') return { ...base, splits: [], sets: {} };
   if (type === 'volleyball') return { ...base };
-  if (type === 'meal') return { ...base, slot: defaultMealSlot(now), items: [], photo_urls: [], ai_inferred: false };
   return base;
-}
-
-function defaultMealSlot(d) {
-  const h = d.getHours();
-  if (h < 10) return 'breakfast';
-  if (h < 14) return 'lunch';
-  if (h < 17) return 'snack';
-  return 'dinner';
 }
 
 function blockHasData(b) {
@@ -1063,10 +1026,6 @@ function blockHasData(b) {
   if (b.type === 'lift') {
     if (b.splits?.length) return true;
     if (b.sets && Object.values(b.sets).some(s => s?.length)) return true;
-  }
-  if (b.type === 'meal') {
-    if ((b.items || []).some(it => it.name || it.kcal)) return true;
-    if ((b.photo_urls || []).length) return true;
   }
   if (b.note?.trim()) return true;
   return false;
@@ -1275,7 +1234,7 @@ function collectCellMarkers(day) {
   if (!day || !day.blocks) return [];
   const seen = new Set();
   const markers = [];
-  const order = [...state.config.splitOrder, 'vb', 'meal'];
+  const order = [...state.config.splitOrder, 'vb'];
   for (const b of day.blocks) {
     if (b.type === 'lift') {
       for (const s of b.splits || []) {
@@ -1283,8 +1242,6 @@ function collectCellMarkers(day) {
       }
     } else if (b.type === 'volleyball') {
       if (!seen.has('vb')) { seen.add('vb'); markers.push('vb'); }
-    } else if (b.type === 'meal') {
-      if (!seen.has('meal')) { seen.add('meal'); markers.push('meal'); }
     }
   }
   markers.sort((a, b) => order.indexOf(a) - order.indexOf(b));
@@ -1356,7 +1313,6 @@ function renderSidebar() {
     <div class="grid grid-cols-2 gap-2">
       <button class="add-block-btn" data-add-block="lift">+ LIFT · 重訓</button>
       <button class="add-block-btn" data-add-block="volleyball">+ VOLLEYBALL · 排球</button>
-      <button class="add-block-btn" data-add-block="meal">+ MEAL · 飲食</button>
     </div>
 
     ${dayHasData(day) ? renderDayTotals(totals) : ''}
@@ -1369,7 +1325,6 @@ function computeDayTotals(day) {
   const blocks = day.blocks || [];
   let activeMin = 0, vbMin = 0;
   let mainSets = 0, prepSets = 0, volume = 0;
-  let kcal = 0, p = 0, f = 0, c = 0, mealCount = 0;
   for (const b of blocks) {
     const mins = blockMinutes(b);
     activeMin += mins;
@@ -1383,36 +1338,11 @@ function computeDayTotals(day) {
         }
       }
     }
-    if (b.type === 'meal') {
-      const t = mealTotals(b);
-      kcal += t.kcal; p += t.p; f += t.f; c += t.c;
-      mealCount++;
-    }
   }
-  return { blockCount: blocks.length, activeMin, vbMin, mainSets, prepSets, volume, kcal, p, f, c, mealCount };
+  return { blockCount: blocks.length, activeMin, vbMin, mainSets, prepSets, volume };
 }
 
 function renderDayTotals(t) {
-  const macroRow = t.mealCount ? `
-      <div class="grid grid-cols-4 gap-px bg-borderL" style="border:1px solid #DBD6CD; border-radius:2px; margin-top:8px;">
-        <div class="bg-surface py-4 px-2 text-center">
-          <div class="label-micro mb-1" style="font-size:9px;">KCAL</div>
-          <div class="data-cell" style="font-size:16px;">${Math.round(t.kcal)}</div>
-        </div>
-        <div class="bg-surface py-4 px-2 text-center">
-          <div class="label-micro mb-1" style="font-size:9px;">P · g</div>
-          <div class="data-cell" style="font-size:16px;">${t.p.toFixed(1).replace(/\.0$/,'')}</div>
-        </div>
-        <div class="bg-surface py-4 px-2 text-center">
-          <div class="label-micro mb-1" style="font-size:9px;">F · g</div>
-          <div class="data-cell" style="font-size:16px;">${t.f.toFixed(1).replace(/\.0$/,'')}</div>
-        </div>
-        <div class="bg-surface py-4 px-2 text-center">
-          <div class="label-micro mb-1" style="font-size:9px;">C · g</div>
-          <div class="data-cell" style="font-size:16px;">${t.c.toFixed(1).replace(/\.0$/,'')}</div>
-        </div>
-      </div>
-  ` : '';
   return `
     <div class="ui-card p-5">
       <div class="flex items-baseline justify-between mb-4">
@@ -1437,7 +1367,6 @@ function renderDayTotals(t) {
           <div class="data-cell" style="font-size:16px;">${t.vbMin ? fmtDuration(t.vbMin) : '—'}</div>
         </div>
       </div>
-      ${macroRow}
     </div>
   `;
 }
@@ -1445,7 +1374,6 @@ function renderDayTotals(t) {
 function renderBlock(b, dStr) {
   if (b.type === 'lift') return renderLiftBlock(b, dStr);
   if (b.type === 'volleyball') return renderVolleyballBlock(b, dStr);
-  if (b.type === 'meal') return renderMealBlock(b, dStr);
   return '';
 }
 
@@ -1464,37 +1392,9 @@ function vbSummary(b) {
   return dur ? fmtDuration(dur) : '排球';
 }
 
-const MEAL_SLOTS = [
-  { key: 'breakfast', cn: '早餐' },
-  { key: 'lunch',     cn: '午餐' },
-  { key: 'dinner',    cn: '晚餐' },
-  { key: 'snack',     cn: '點心' },
-];
-
-function mealTotals(b) {
-  const t = { kcal: 0, p: 0, f: 0, c: 0 };
-  for (const it of b.items || []) {
-    t.kcal += Number(it.kcal) || 0;
-    t.p    += Number(it.p)    || 0;
-    t.f    += Number(it.f)    || 0;
-    t.c    += Number(it.c)    || 0;
-  }
-  return t;
-}
-
-function mealSummary(b) {
-  const slot = MEAL_SLOTS.find(s => s.key === b.slot)?.cn || '飲食';
-  const t = mealTotals(b);
-  const items = (b.items || []).filter(it => it.name).length;
-  if (!items && !t.kcal) return slot;
-  return `${slot} · ${Math.round(t.kcal)} kcal${items ? ' · ' + items + ' 項' : ''}`;
-}
-
 function renderBlockHeader(b, typeLabel, dotColor) {
   const dur = blockMinutes(b);
-  const summary = b.type === 'lift' ? liftSummary(b)
-                : b.type === 'meal' ? mealSummary(b)
-                : vbSummary(b);
+  const summary = b.type === 'lift' ? liftSummary(b) : vbSummary(b);
   return `
     <div class="block-header">
       <div class="block-type-dot" style="background: ${dotColor};"></div>
@@ -1581,84 +1481,6 @@ function renderLiftBody(b, dStr) {
       <div>
         <div class="title-card mb-2" style="color:#7A756C;">BLOCK_NOTE</div>
         <textarea rows="2" class="block-note-input" data-block-note="${b.id}" placeholder="本 block 筆記">${b.note || ''}</textarea>
-      </div>
-    </div>
-  `;
-}
-
-function renderMealBlock(b, dStr) {
-  if (b.collapsed) {
-    return `
-      <div class="block-card collapsed" data-block-id="${b.id}">
-        ${renderBlockHeader(b, 'MEAL · 飲食', '#E6B300')}
-      </div>
-    `;
-  }
-  const slots = MEAL_SLOTS.map(s => `
-    <button class="meal-slot-chip ${b.slot === s.key ? 'active' : ''}" data-meal-slot="${b.id}|${s.key}">${s.key} · ${s.cn}</button>
-  `).join('');
-
-  const photos = (b.photo_urls || []).map((u, i) => `
-    <div class="meal-photo">
-      <img src="${u}" alt="" loading="lazy">
-      <button class="meal-photo-del" data-meal-photo-del="${b.id}|${i}" title="移除">×</button>
-    </div>
-  `).join('');
-
-  const items = (b.items || []).map((it, i) => `
-    <div class="meal-item-row">
-      <input class="meal-item-input" placeholder="食物名稱" value="${(it.name || '').replace(/"/g,'&quot;')}" data-meal-item="${b.id}|${i}|name">
-      <input class="meal-item-input" placeholder="份量" value="${(it.qty || '').replace(/"/g,'&quot;')}" data-meal-item="${b.id}|${i}|qty">
-      <input class="meal-item-input numeric" type="number" inputmode="numeric" placeholder="kcal" value="${it.kcal ?? ''}" data-meal-item="${b.id}|${i}|kcal">
-      <div class="meal-item-pfc">
-        <input class="meal-item-input numeric" type="number" inputmode="decimal" placeholder="P" value="${it.p ?? ''}" data-meal-item="${b.id}|${i}|p" style="width:34px; display:inline-block;">
-        /
-        <input class="meal-item-input numeric" type="number" inputmode="decimal" placeholder="F" value="${it.f ?? ''}" data-meal-item="${b.id}|${i}|f" style="width:34px; display:inline-block;">
-        /
-        <input class="meal-item-input numeric" type="number" inputmode="decimal" placeholder="C" value="${it.c ?? ''}" data-meal-item="${b.id}|${i}|c" style="width:34px; display:inline-block;">
-      </div>
-      <button class="meal-item-del" data-meal-item-del="${b.id}|${i}" title="刪除">×</button>
-    </div>
-  `).join('');
-
-  const t = mealTotals(b);
-
-  return `
-    <div class="block-card" data-block-id="${b.id}">
-      ${renderBlockHeader(b, 'MEAL · 飲食', '#E6B300')}
-      <div class="block-body">
-        <div class="title-card mb-2" style="color:#7A756C;">SLOT</div>
-        <div class="meal-slot-row">${slots}</div>
-
-        <div class="title-card mb-2" style="color:#7A756C;">PHOTOS</div>
-        <div class="meal-photos-row">
-          ${photos}
-          <label class="meal-photo-add">
-            +<br><span class="meal-photo-uploading">PHOTO</span>
-            <input type="file" accept="image/*" capture="environment" data-meal-photo-add="${b.id}" hidden>
-          </label>
-        </div>
-
-        <div class="flex items-center justify-between mb-2">
-          <div class="title-card" style="color:#7A756C;">ITEMS</div>
-          ${b.ai_inferred ? '<div class="label-micro" style="color:#E6B300;">AI 估算</div>' : ''}
-        </div>
-        <div class="meal-items">
-          ${items}
-          <button class="meal-add-item" data-meal-item-add="${b.id}">+ 加食物</button>
-        </div>
-
-        <div class="meal-totals">
-          <div class="meal-total-cell"><div class="meal-total-label">KCAL</div><div class="meal-total-value">${Math.round(t.kcal)}</div></div>
-          <div class="meal-total-cell"><div class="meal-total-label">P (g)</div><div class="meal-total-value">${t.p.toFixed(1).replace(/\.0$/,'')}</div></div>
-          <div class="meal-total-cell"><div class="meal-total-label">F (g)</div><div class="meal-total-value">${t.f.toFixed(1).replace(/\.0$/,'')}</div></div>
-          <div class="meal-total-cell"><div class="meal-total-label">C (g)</div><div class="meal-total-value">${t.c.toFixed(1).replace(/\.0$/,'')}</div></div>
-        </div>
-
-        <div class="mt-4">
-          <div class="title-card mb-2" style="color:#7A756C;">BLOCK_NOTE</div>
-          <textarea rows="2" class="block-note-input" data-block-note="${b.id}" placeholder="本餐筆記（食材、心情、身體反應）">${b.note || ''}</textarea>
-        </div>
       </div>
     </div>
   `;
@@ -1791,114 +1613,6 @@ function bindSidebarEvents(dStr, host) {
       b.sets[exId][Number(idx)][field] = Number(inp.value) || 0;
       save();
       renderCalendar();
-    });
-  });
-
-  // === MEAL block events ===
-  host.querySelectorAll('[data-meal-slot]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const [id, slot] = btn.dataset.mealSlot.split('|');
-      const b = getBlock(id);
-      if (!b) return;
-      b.slot = slot;
-      save(); renderAll();
-    });
-  });
-
-  host.querySelectorAll('[data-meal-item]').forEach(inp => {
-    inp.addEventListener('input', () => {
-      const [id, idx, field] = inp.dataset.mealItem.split('|');
-      const b = getBlock(id);
-      if (!b) return;
-      b.items = b.items || [];
-      const i = Number(idx);
-      if (!b.items[i]) b.items[i] = {};
-      const isNum = ['kcal','p','f','c'].includes(field);
-      b.items[i][field] = isNum ? (inp.value === '' ? null : Number(inp.value)) : inp.value;
-      save();
-      // 即時更新 totals 不重渲整塊（避免 input 失焦）
-      const card = inp.closest('.block-card');
-      if (card) {
-        const t = mealTotals(b);
-        const cells = card.querySelectorAll('.meal-total-value');
-        if (cells.length === 4) {
-          cells[0].textContent = Math.round(t.kcal);
-          cells[1].textContent = t.p.toFixed(1).replace(/\.0$/,'');
-          cells[2].textContent = t.f.toFixed(1).replace(/\.0$/,'');
-          cells[3].textContent = t.c.toFixed(1).replace(/\.0$/,'');
-        }
-      }
-    });
-  });
-
-  host.querySelectorAll('[data-meal-item-add]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const b = getBlock(btn.dataset.mealItemAdd);
-      if (!b) return;
-      b.items = b.items || [];
-      b.items.push({ name: '', qty: '', kcal: null, p: null, f: null, c: null });
-      save(); renderAll();
-    });
-  });
-
-  host.querySelectorAll('[data-meal-item-del]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const [id, idx] = btn.dataset.mealItemDel.split('|');
-      const b = getBlock(id);
-      if (!b) return;
-      b.items.splice(Number(idx), 1);
-      save(); renderAll();
-    });
-  });
-
-  host.querySelectorAll('[data-meal-photo-add]').forEach(inp => {
-    inp.addEventListener('change', async () => {
-      const id = inp.dataset.mealPhotoAdd;
-      const file = inp.files?.[0];
-      if (!file) return;
-      const b = getBlock(id);
-      if (!b) return;
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-      const path = `${dStr}/${id}-${Date.now()}.${ext}`;
-      try {
-        const res = await fetch(`${SB_URL}/storage/v1/object/meal-photos/${path}`, {
-          method: 'POST',
-          headers: {
-            'apikey': SB_KEY,
-            'Authorization': `Bearer ${SB_KEY}`,
-            'Content-Type': file.type || 'image/jpeg',
-            'x-upsert': 'true',
-          },
-          body: file,
-        });
-        if (!res.ok) throw new Error(`upload ${res.status}`);
-        b.photo_urls = b.photo_urls || [];
-        b.photo_urls.push(`${SB_URL}/storage/v1/object/public/meal-photos/${path}`);
-        save(); renderAll();
-      } catch (e) {
-        alert('照片上傳失敗：' + e.message);
-      }
-    });
-  });
-
-  host.querySelectorAll('[data-meal-photo-del]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const [id, idx] = btn.dataset.mealPhotoDel.split('|');
-      const b = getBlock(id);
-      if (!b) return;
-      const url = b.photo_urls[Number(idx)];
-      // 從 Storage 也刪掉（best-effort）
-      const m = url?.match(/meal-photos\/(.+)$/);
-      if (m) {
-        try {
-          await fetch(`${SB_URL}/storage/v1/object/meal-photos/${m[1]}`, {
-            method: 'DELETE',
-            headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` },
-          });
-        } catch {}
-      }
-      b.photo_urls.splice(Number(idx), 1);
-      save(); renderAll();
     });
   });
 
