@@ -610,25 +610,45 @@ tailwind.config = {
 
   /* === LIBRARY VIEW === */
   .lib-wrap { max-width: 1240px; margin: 0 auto; padding: 32px 32px 80px; }
-  .lib-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  .lib-sticky { position: sticky; top: 0; background: #F8F7F4; padding-top: 4px; padding-bottom: 12px; z-index: 5; margin: 0 -32px 16px; padding-left: 32px; padding-right: 32px; border-bottom: 1px solid #E8E4DB; }
+  .lib-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
   .lib-search { flex: 1 1 320px; min-width: 240px; border: 1px solid #DBD6CD; border-radius: 6px; background: #FCFBFA; padding: 10px 14px; font-family: 'Noto Sans TC', sans-serif; font-size: 14px; color: #2A2520; }
   .lib-search:focus { outline: none; border-color: #2A2520; }
   .lib-stat { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; color: #7A756C; }
-  .lib-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .lib-clear { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; padding: 4px 8px; border: 1px solid #C0392B; color: #C0392B; border-radius: 99px; background: transparent; cursor: pointer; text-transform: uppercase; }
+  .lib-clear:hover { background: #C0392B; color: #FCFBFA; }
+  .lib-filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .lib-filter-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.16em; color: #7A756C; text-transform: uppercase; margin-right: 4px; }
   .lib-cat { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; padding: 5px 10px; border: 1px solid #DBD6CD; border-radius: 99px; background: transparent; color: #7A756C; cursor: pointer; text-transform: uppercase; }
   .lib-cat:hover { color: #2A2520; border-color: #7A756C; }
   .lib-cat.active { color: #FCFBFA; background: #2A2520; border-color: #2A2520; }
+  .lib-cat.fav.active { color: #FCFBFA; background: #C0392B; border-color: #C0392B; }
+  .lib-muscle { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; padding: 3px 8px; border: 1px solid #DBD6CD; border-radius: 99px; background: transparent; color: #7A756C; cursor: pointer; text-transform: uppercase; }
+  .lib-muscle:hover { color: #2A2520; border-color: #7A756C; }
+  .lib-muscle.active { color: #FCFBFA; background: #4A6B8C; border-color: #4A6B8C; }
   .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .lib-card { background: #FCFBFA; border: 1px solid #DBD6CD; border-radius: 6px; cursor: pointer; transition: border-color 0.12s, transform 0.12s; overflow: hidden; padding: 0; text-align: left; font: inherit; color: inherit; }
+  .lib-card { position: relative; background: #FCFBFA; border: 1px solid #DBD6CD; border-radius: 6px; cursor: pointer; transition: border-color 0.12s, transform 0.12s; overflow: hidden; padding: 0; text-align: left; font: inherit; color: inherit; }
   .lib-card:hover { border-color: #2A2520; transform: translateY(-1px); }
   .lib-thumb { width: 100%; aspect-ratio: 4/3; background: #F8F7F4; display: block; object-fit: cover; border-bottom: 1px solid #E8E4DB; }
   .lib-card-body { padding: 10px 12px 12px; }
-  .lib-card-cn { font-family: 'Noto Sans TC', sans-serif; font-size: 14px; font-weight: 500; color: #2A2520; line-height: 1.3; }
+  .lib-card-cn { font-family: 'Noto Sans TC', sans-serif; font-size: 14px; font-weight: 500; color: #2A2520; line-height: 1.3; padding-right: 24px; }
   .lib-card-en { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: #7A756C; margin-top: 3px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .lib-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
   .lib-card-tag { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.08em; padding: 2px 6px; border-radius: 99px; background: #F4F2ED; color: #7A756C; text-transform: uppercase; }
   .lib-card-tag.lvl { color: #2A2520; background: #E8E4DB; }
+  .lib-fav { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 99px; border: none; background: rgba(252,251,250,0.92); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; color: #C0BCB2; transition: color 0.12s, transform 0.12s; z-index: 1; }
+  .lib-fav:hover { color: #C0392B; transform: scale(1.1); }
+  .lib-fav.on { color: #C0392B; }
   .lib-empty { text-align: center; padding: 60px 20px; color: #7A756C; font-family: 'Noto Sans TC', sans-serif; font-size: 14px; }
+  .lib-picker-hint { font-family: 'Noto Sans TC', sans-serif; font-size: 12px; color: #4A6B8C; padding: 6px 0; }
+
+  /* === LIBRARY PICKER MODAL === */
+  .picker-backdrop { position: fixed; inset: 0; background: rgba(42,37,32,0.45); backdrop-filter: blur(2px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.18s ease; }
+  .picker-backdrop.open { opacity: 1; pointer-events: auto; }
+  .picker-card { background: #F8F7F4; border: 1px solid #DBD6CD; border-radius: 8px; max-width: 1080px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 18px 48px rgba(0,0,0,0.18); }
+  .picker-head { padding: 16px 20px; border-bottom: 1px solid #E8E4DB; display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; top: 0; background: #F8F7F4; z-index: 2; }
+  .picker-title { font-family: 'Noto Sans TC', sans-serif; font-size: 16px; font-weight: 500; color: #2A2520; }
+  .picker-target { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #4A6B8C; text-transform: uppercase; }
 
   /* === EXERCISE MODAL === */
   .ex-name-btn { background: transparent; border: none; padding: 0 0 0 0; margin: 0; cursor: pointer; font: inherit; color: inherit; text-align: left; border-bottom: 1px dotted #C0BCB2; transition: border-color 0.12s; display: inline-flex; align-items: center; gap: 4px; }
@@ -748,6 +768,10 @@ tailwind.config = {
   <div class="modal-card" id="exercise-modal-content"></div>
 </div>
 
+<div id="library-picker" class="picker-backdrop">
+  <div class="picker-card" id="library-picker-content"></div>
+</div>
+
 <script>
 // ============================================================
 // SUPABASE — 雲端持久化（跨設備同步）
@@ -854,6 +878,7 @@ const STORAGE_KEY_V1 = 'physics_lab_training_log_v1';
 const CONFIG_STORAGE_KEY = 'physics_lab_config_v1';
 const MENU_STORAGE_KEY   = 'physics_lab_menu_v2';
 const LIBRARY_STORAGE_KEY = 'physics_lab_library_v1';
+const FAVORITES_STORAGE_KEY = 'physics_lab_favorites_v1';
 
 const state = {
   view: new Date(),
@@ -864,8 +889,25 @@ const state = {
   config: null, // 從 CONFIG_STORAGE_KEY 載入，fallback DEFAULT_CONFIG
   menu: null,   // { [splitKey]: [{sets,reps},...] }
   library: {},  // exercise_library: { [id]: {name_cn, name_en, instructions_cn, instructions_en, image_urls, primary_muscles, equipment, level, category} }
-  libraryFilter: { q: '', category: '' },
+  libraryFilter: { q: '', category: '', muscles: [], favOnly: false },
+  favorites: new Set(),
+  libraryPicker: null,  // { splitKey } 當有值時 lib-card 點擊變成「加到 split」而非開 modal
 };
+
+function loadFavorites() {
+  try {
+    const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    if (raw) state.favorites = new Set(JSON.parse(raw));
+  } catch {}
+}
+function saveFavorites() {
+  try { localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([...state.favorites])); } catch {}
+}
+function toggleFavorite(id) {
+  if (state.favorites.has(id)) state.favorites.delete(id);
+  else state.favorites.add(id);
+  saveFavorites();
+}
 
 // ---- helpers ----
 function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -1703,40 +1745,88 @@ const LIB_CATEGORIES = [
   { key: 'strongman',           label: 'STRONGMAN'   },
 ];
 
-function renderLibrary() {
-  const host = document.getElementById('view-library');
-  const lib = state.library || {};
-  const ids = Object.keys(lib);
-  if (!ids.length) {
-    host.innerHTML = `<div class="lib-wrap"><div class="lib-empty">動作庫載入中… 若持續未顯示，檢查網路或重新整理。</div></div>`;
-    return;
+function libraryAllMuscles() {
+  const set = new Set();
+  for (const r of Object.values(state.library || {})) {
+    for (const m of r.primary_muscles || []) set.add(m);
   }
+  return [...set].sort();
+}
 
-  const { q, category } = state.libraryFilter;
-  const qLower = q.trim().toLowerCase();
-  const matches = ids
-    .map(id => lib[id])
+function libraryFilteredRows() {
+  const lib = state.library || {};
+  const { q, category, muscles, favOnly } = state.libraryFilter;
+  const qLower = (q || '').trim().toLowerCase();
+  return Object.values(lib)
     .filter(r => {
+      if (favOnly && !state.favorites.has(r.id)) return false;
       if (category && r.category !== category) return false;
+      if (muscles && muscles.length) {
+        const pm = r.primary_muscles || [];
+        if (!muscles.some(m => pm.includes(m))) return false;
+      }
       if (!qLower) return true;
-      const hay = [r.name_cn, r.name_en, ...(r.aliases || []), ...(r.primary_muscles || [])].filter(Boolean).join(' ').toLowerCase();
+      const hay = [r.name_cn, r.name_en, ...(r.aliases || []), ...(r.primary_muscles || [])]
+        .filter(Boolean).join(' ').toLowerCase();
       return hay.includes(qLower);
     })
     .sort((a, b) => (a.name_cn || a.name_en || '').localeCompare(b.name_cn || b.name_en || '', 'zh-Hant'));
+}
 
+function libraryFilterIsActive() {
+  const f = state.libraryFilter;
+  return !!(f.q || f.category || (f.muscles && f.muscles.length) || f.favOnly);
+}
+
+function renderLibraryControls(host, { mode = 'page', matches, total }) {
+  const f = state.libraryFilter;
   const cats = LIB_CATEGORIES.map(c => `
-    <button class="lib-cat ${state.libraryFilter.category === c.key ? 'active' : ''}" data-lib-cat="${c.key}">${c.label}</button>
+    <button class="lib-cat ${f.category === c.key ? 'active' : ''}" data-lib-cat="${c.key}">${c.label}</button>
+  `).join('') + `
+    <button class="lib-cat fav ${f.favOnly ? 'active' : ''}" data-lib-fav-toggle>★ FAV (${state.favorites.size})</button>
+  `;
+  const muscleChips = libraryAllMuscles().map(m => `
+    <button class="lib-muscle ${(f.muscles || []).includes(m) ? 'active' : ''}" data-lib-muscle="${m}">${m}</button>
   `).join('');
+  const stat = `${matches} / ${total}`;
+  const clear = libraryFilterIsActive() ? `<button class="lib-clear" id="lib-clear-btn">CLEAR</button>` : '';
+  const titleBlock = mode === 'page' ? `
+    <div>
+      <div class="label-micro mb-1">EXERCISE_LIBRARY</div>
+      <div class="title-page">動作庫 · Library</div>
+    </div>` : '';
+  return `
+    <div class="lib-sticky">
+      <div class="lib-head">
+        ${titleBlock}
+        <input type="search" class="lib-search" placeholder="搜尋動作名 / 肌群 / 別名…" id="lib-search-input" value="${(f.q || '').replace(/"/g,'&quot;')}">
+        ${clear}
+        <div class="lib-stat">${stat}</div>
+      </div>
+      <div class="lib-filter-row"><span class="lib-filter-label">CATEGORY</span>${cats}</div>
+      <div class="lib-filter-row"><span class="lib-filter-label">MUSCLE</span>${muscleChips}</div>
+    </div>
+  `;
+}
 
-  const cards = matches.length ? matches.map(r => {
+function renderLibraryCards(rows, { picker = false } = {}) {
+  if (!rows.length) {
+    return `<div class="lib-empty">沒有符合此篩選的動作。試試清除條件或換關鍵字。</div>`;
+  }
+  return `<div class="lib-grid">${rows.map(r => {
     const img = (r.image_urls || [])[0] || '';
     const tags = [];
     if (r.level)     tags.push(`<span class="lib-card-tag lvl">${r.level.toUpperCase()}</span>`);
     if (r.equipment) tags.push(`<span class="lib-card-tag">${r.equipment.toUpperCase()}</span>`);
-    const muscles = (r.primary_muscles || [])[0];
-    if (muscles)     tags.push(`<span class="lib-card-tag">${muscles.toUpperCase()}</span>`);
+    const muscle = (r.primary_muscles || [])[0];
+    if (muscle)      tags.push(`<span class="lib-card-tag">${muscle.toUpperCase()}</span>`);
+    const isFav = state.favorites.has(r.id);
+    const action = picker
+      ? `data-lib-pick="${r.id}"`
+      : `data-ex-info="${r.id}"`;
     return `
-      <button class="lib-card" data-ex-info="${r.id}">
+      <button class="lib-card" ${action}>
+        <button class="lib-fav ${isFav ? 'on' : ''}" data-lib-fav="${r.id}" title="收藏">${isFav ? '♥' : '♡'}</button>
         ${img ? `<img class="lib-thumb" src="${img}" alt="" loading="lazy" onerror="this.style.opacity=0.2;">` : `<div class="lib-thumb"></div>`}
         <div class="lib-card-body">
           <div class="lib-card-cn">${r.name_cn || r.name_en}</div>
@@ -1745,23 +1835,10 @@ function renderLibrary() {
         </div>
       </button>
     `;
-  }).join('') : `<div class="lib-empty">沒有符合「${q || '此篩選'}」的動作。</div>`;
+  }).join('')}</div>`;
+}
 
-  host.innerHTML = `
-    <div class="lib-wrap">
-      <div class="lib-head">
-        <div>
-          <div class="label-micro mb-1">EXERCISE_LIBRARY</div>
-          <div class="title-page">動作庫 · Library</div>
-        </div>
-        <input type="search" class="lib-search" placeholder="搜尋動作名 / 肌群 / 別名…" id="lib-search-input" value="${(q || '').replace(/"/g,'&quot;')}">
-        <div class="lib-stat">${matches.length} / ${ids.length}</div>
-      </div>
-      <div class="lib-cats">${cats}</div>
-      <div class="lib-grid">${cards}</div>
-    </div>
-  `;
-
+function bindLibraryControls(host, rerender) {
   const input = host.querySelector('#lib-search-input');
   if (input) {
     let t;
@@ -1769,9 +1846,8 @@ function renderLibrary() {
       clearTimeout(t);
       t = setTimeout(() => {
         state.libraryFilter.q = input.value;
-        renderLibrary();
-        // refocus & put cursor at end
-        const next = document.getElementById('lib-search-input');
+        rerender();
+        const next = host.querySelector('#lib-search-input');
         if (next) { next.focus(); const len = next.value.length; next.setSelectionRange(len, len); }
       }, 120);
     });
@@ -1779,10 +1855,136 @@ function renderLibrary() {
   host.querySelectorAll('[data-lib-cat]').forEach(btn => {
     btn.addEventListener('click', () => {
       state.libraryFilter.category = btn.dataset.libCat;
-      renderLibrary();
+      rerender();
+    });
+  });
+  host.querySelectorAll('[data-lib-muscle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const m = btn.dataset.libMuscle;
+      const arr = state.libraryFilter.muscles || [];
+      const i = arr.indexOf(m);
+      if (i >= 0) arr.splice(i, 1); else arr.push(m);
+      state.libraryFilter.muscles = arr;
+      rerender();
+    });
+  });
+  const favToggle = host.querySelector('[data-lib-fav-toggle]');
+  if (favToggle) favToggle.addEventListener('click', () => {
+    state.libraryFilter.favOnly = !state.libraryFilter.favOnly;
+    rerender();
+  });
+  const clr = host.querySelector('#lib-clear-btn');
+  if (clr) clr.addEventListener('click', () => {
+    state.libraryFilter = { q: '', category: '', muscles: [], favOnly: false };
+    rerender();
+  });
+  host.querySelectorAll('[data-lib-fav]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); e.preventDefault();
+      toggleFavorite(btn.dataset.libFav);
+      rerender();
     });
   });
 }
+
+function renderLibrary() {
+  const host = document.getElementById('view-library');
+  const lib = state.library || {};
+  const total = Object.keys(lib).length;
+  if (!total) {
+    host.innerHTML = `<div class="lib-wrap"><div class="lib-empty">動作庫載入中… 若持續未顯示，檢查網路或重新整理。</div></div>`;
+    return;
+  }
+  const rows = libraryFilteredRows();
+  host.innerHTML = `
+    <div class="lib-wrap">
+      ${renderLibraryControls(host, { mode: 'page', matches: rows.length, total })}
+      ${renderLibraryCards(rows)}
+    </div>
+  `;
+  bindLibraryControls(host, renderLibrary);
+}
+
+// === LIBRARY PICKER (open from MENU editor "+ ADD EXERCISE") ===
+function openLibraryPicker(splitKey) {
+  state.libraryPicker = { splitKey };
+  renderLibraryPicker();
+  document.getElementById('library-picker').classList.add('open');
+}
+function closeLibraryPicker() {
+  state.libraryPicker = null;
+  document.getElementById('library-picker').classList.remove('open');
+}
+function renderLibraryPicker() {
+  if (!state.libraryPicker) return;
+  const host = document.getElementById('library-picker-content');
+  const splitKey = state.libraryPicker.splitKey;
+  const splitLabel = state.config?.splits?.[splitKey]?.en || splitKey;
+  const total = Object.keys(state.library || {}).length;
+  if (!total) {
+    host.innerHTML = `<div class="picker-head"><div class="picker-title">動作庫尚未載入</div><button class="modal-close" id="picker-close-btn">×</button></div><div class="lib-empty">請稍候或檢查網路</div>`;
+  } else {
+    const rows = libraryFilteredRows();
+    host.innerHTML = `
+      <div class="picker-head">
+        <div>
+          <div class="picker-title">挑選動作加入</div>
+          <div class="picker-target">→ ${splitLabel}</div>
+        </div>
+        <button class="modal-close" id="picker-close-btn" aria-label="關閉">×</button>
+      </div>
+      <div class="lib-wrap" style="padding:16px 20px 24px;">
+        ${renderLibraryControls(host, { mode: 'picker', matches: rows.length, total })}
+        <div class="lib-picker-hint">點任一卡片即加入到「${splitLabel}」（不會關閉視窗，可連續加多個）</div>
+        ${renderLibraryCards(rows, { picker: true })}
+      </div>
+    `;
+  }
+  // wire close + filters
+  const closeBtn = host.querySelector('#picker-close-btn');
+  if (closeBtn) closeBtn.addEventListener('click', closeLibraryPicker);
+  bindLibraryControls(host, renderLibraryPicker);
+}
+
+function addLibraryItemToSplit(splitKey, libRow) {
+  const cfg = state.config;
+  if (!cfg?.splits?.[splitKey]) return;
+  const exists = cfg.splits[splitKey].exercises.some(e => e.id === libRow.id);
+  if (exists) {
+    // 簡單視覺回饋：抖一下 picker title
+    const t = document.querySelector('#library-picker .picker-title');
+    if (t) { t.style.color = '#C0392B'; t.textContent = `「${libRow.name_cn || libRow.name_en}」已在此 split 中`; setTimeout(() => { t.style.color = ''; t.textContent = '挑選動作加入'; }, 1400); }
+    return;
+  }
+  cfg.splits[splitKey].exercises.push({
+    id: libRow.id,
+    cn: libRow.name_cn || libRow.name_en,
+    en: libRow.name_en,
+    scheme: '3 × 10',
+  });
+  saveConfig();
+  state.menu = defaultMenuState();
+  saveMenu();
+  renderMenu();
+  // picker 留著，使用者可以連續加
+}
+
+// 全域點擊代理：挑 picker mode 的卡片 + 關 picker
+document.addEventListener('click', (e) => {
+  if (!state.libraryPicker) return;
+  const pickCard = e.target.closest('[data-lib-pick]');
+  if (pickCard && !e.target.closest('[data-lib-fav]')) {
+    e.preventDefault();
+    const id = pickCard.dataset.libPick;
+    const row = state.library?.[id];
+    if (row) addLibraryItemToSplit(state.libraryPicker.splitKey, row);
+    return;
+  }
+  if (e.target.id === 'library-picker') closeLibraryPicker();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.libraryPicker) closeLibraryPicker();
+});
 
 function renderMenu() {
   const host = document.getElementById('view-menu');
@@ -2101,13 +2303,11 @@ function renderEditor(host) {
     });
   });
 
-  // add exercise
+  // add exercise — 從 library 挑
   host.querySelectorAll('[data-add-ex]').forEach(btn => {
     btn.addEventListener('click', () => {
       const key = btn.dataset.addEx;
-      const id = 'ex_' + Math.random().toString(36).slice(2, 8);
-      cfg.splits[key].exercises.push({ id, cn: '新動作', en: 'New Exercise', scheme: '3 × 10' });
-      saveConfig(); state.menu = defaultMenuState(); saveMenu(); renderMenu();
+      openLibraryPicker(key);
     });
   });
 
@@ -2247,6 +2447,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 (async () => {
+  loadFavorites();
   await loadConfig();
   await loadMenu();
   injectSplitStyles();
