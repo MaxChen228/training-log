@@ -1,2 +1,7 @@
 .env
 .DS_Store
+etl/.venv/
+etl/__pycache__/
+etl/exercises_raw.json
+etl/batches/
+etl/translations_part_*.json

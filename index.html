@@ -607,6 +607,32 @@ tailwind.config = {
   .editor-add-split { width: 100%; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #7A756C; background: transparent; border: 1px dashed #DBD6CD; border-radius: 4px; cursor: pointer; }
   .editor-add-split:hover { border-color: #2A2520; color: #2A2520; }
   .color-picker-input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+
+  /* === EXERCISE MODAL === */
+  .ex-name-btn { background: transparent; border: none; padding: 0; margin: 0; cursor: pointer; font: inherit; color: inherit; text-align: left; border-bottom: 1px dotted transparent; }
+  .ex-name-btn:hover { border-bottom-color: #7A756C; }
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(42,37,32,0.45); backdrop-filter: blur(2px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.18s ease; }
+  .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+  .modal-card { background: #FCFBFA; border: 1px solid #DBD6CD; border-radius: 6px; max-width: 680px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 18px 48px rgba(0,0,0,0.18); transform: translateY(8px); transition: transform 0.18s ease; }
+  .modal-backdrop.open .modal-card { transform: translateY(0); }
+  .modal-head { padding: 18px 22px 14px; border-bottom: 1px solid #E8E4DB; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; position: sticky; top: 0; background: #FCFBFA; z-index: 1; }
+  .modal-head-cn { font-family: 'Noto Sans TC', sans-serif; font-size: 20px; font-weight: 500; color: #2A2520; line-height: 1.2; }
+  .modal-head-en { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A756C; margin-top: 4px; text-transform: uppercase; }
+  .modal-close { background: transparent; border: 1px solid #DBD6CD; border-radius: 4px; width: 28px; height: 28px; cursor: pointer; color: #7A756C; font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .modal-close:hover { color: #2A2520; border-color: #7A756C; }
+  .modal-body { padding: 16px 22px 22px; }
+  .modal-images { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; background: #F8F7F4; border-radius: 4px; overflow: hidden; }
+  .modal-images img { width: 100%; height: auto; display: block; aspect-ratio: 4/3; object-fit: cover; background: #F8F7F4; }
+  .modal-images.single { grid-template-columns: 1fr; }
+  .modal-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .modal-meta-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; padding: 3px 8px; border: 1px solid #DBD6CD; border-radius: 99px; color: #7A756C; text-transform: uppercase; }
+  .modal-meta-tag.primary { color: #2A2520; border-color: #7A756C; }
+  .modal-section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; color: #7A756C; text-transform: uppercase; margin-bottom: 10px; }
+  .modal-instructions { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .modal-instructions li { font-family: 'Noto Sans TC', sans-serif; font-size: 13px; line-height: 1.75; color: #2A2520; padding: 8px 0 8px 32px; border-top: 1px dashed #E8E4DB; position: relative; counter-increment: step; }
+  .modal-instructions li:first-child { border-top: none; }
+  .modal-instructions li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #7A756C; letter-spacing: 0.06em; }
+  .modal-empty { font-family: 'Noto Sans TC', sans-serif; font-size: 12px; color: #7A756C; text-align: center; padding: 24px 0; }
 </style>
 </head>
 <body>
@@ -688,6 +714,10 @@ tailwind.config = {
       <div id="view-menu" class="menu-scroll hidden"></div>
     </main>
   </div>
+</div>
+
+<div id="exercise-modal" class="modal-backdrop">
+  <div class="modal-card" id="exercise-modal-content"></div>
 </div>
 
 <script>
@@ -795,6 +825,7 @@ const STORAGE_KEY_V2 = 'physics_lab_training_log_v2';
 const STORAGE_KEY_V1 = 'physics_lab_training_log_v1';
 const CONFIG_STORAGE_KEY = 'physics_lab_config_v1';
 const MENU_STORAGE_KEY   = 'physics_lab_menu_v2';
+const LIBRARY_STORAGE_KEY = 'physics_lab_library_v1';
 
 const state = {
   view: new Date(),
@@ -804,6 +835,7 @@ const state = {
   logs: {},
   config: null, // 從 CONFIG_STORAGE_KEY 載入，fallback DEFAULT_CONFIG
   menu: null,   // { [splitKey]: [{sets,reps},...] }
+  library: {},  // exercise_library: { [id]: {name_cn, name_en, instructions_cn, instructions_en, image_urls, primary_muscles, equipment, level, category} }
 };
 
 // ---- helpers ----
@@ -839,6 +871,20 @@ function injectSplitStyles() {
 }
 
 // ---- config (Supabase + localStorage cache) ----
+async function loadLibrary() {
+  try {
+    const rows = await sbFetch('exercise_library?select=id,name_cn,name_en,instructions_cn,instructions_en,image_urls,primary_muscles,secondary_muscles,equipment,level,category,force,mechanic&order=id');
+    state.library = Object.fromEntries((rows || []).map(r => [r.id, r]));
+    try { localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(state.library)); } catch {}
+  } catch (e) {
+    console.warn('SB loadLibrary:', e.message);
+    try {
+      const raw = localStorage.getItem(LIBRARY_STORAGE_KEY);
+      if (raw) state.library = JSON.parse(raw);
+    } catch {}
+  }
+}
+
 async function loadConfig() {
   try {
     const rows = await sbFetch('settings?key=eq.config&select=value');
@@ -1401,7 +1447,7 @@ function renderLiftBody(b, dStr) {
                     <div class="ex-check ${checked ? 'checked' : ''}" data-lift-toggle="${b.id}|${ex.id}"></div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-baseline gap-2 flex-wrap">
-                        <span class="ex-name" style="font-family:'Noto Sans TC'; font-size:14px; font-weight:400; color:#2A2520;">${ex.cn}</span>
+                        <button class="ex-name-btn ex-name" data-ex-info="${ex.id}" style="font-family:'Noto Sans TC'; font-size:14px; font-weight:400; color:#2A2520;">${ex.cn}</button>
                         ${ex.skip ? '<span class="label-micro" style="color:#C0392B;">SKIP</span>' : ''}
                       </div>
                       <div class="label-micro" style="margin-top:1px;">${ex.en}${ex.note ? ' · ' + ex.note : ''}</div>
@@ -1673,7 +1719,7 @@ function renderMenu() {
             <div class="menu-ex-num">${pad2(i+1)}</div>
             <div class="menu-ex-main">
               <div class="menu-ex-top">
-                <div class="menu-ex-cn">${ex.cn}${ex.skip ? ' <span class="label-micro" style="color:#C0392B;">SKIP</span>' : ''}</div>
+                <div class="menu-ex-cn"><button class="ex-name-btn" data-ex-info="${ex.id}">${ex.cn}</button>${ex.skip ? ' <span class="label-micro" style="color:#C0392B;">SKIP</span>' : ''}</div>
                 ${schemeEditHtml(key, i)}
               </div>
               <div class="menu-ex-en">${ex.en}${ex.note ? ' · ' + ex.note : ''}</div>
@@ -2003,11 +2049,81 @@ document.querySelectorAll('.view-tab').forEach(tab => {
   tab.addEventListener('click', () => setView(tab.dataset.view));
 });
 
+// === EXERCISE INFO MODAL ===
+function openExerciseModal(id) {
+  const lib = state.library?.[id];
+  // fallback：library 沒這筆 → 從現有 config exercises 撈基本資料
+  let cn = '', en = id, instructions_cn = [], instructions_en = [], image_urls = [], primary_muscles = [], equipment = '', level = '', category = '';
+  if (lib) {
+    cn = lib.name_cn || ''; en = lib.name_en || id;
+    instructions_cn = lib.instructions_cn || [];
+    instructions_en = lib.instructions_en || [];
+    image_urls = lib.image_urls || [];
+    primary_muscles = lib.primary_muscles || [];
+    equipment = lib.equipment || ''; level = lib.level || ''; category = lib.category || '';
+  } else if (state.config) {
+    for (const s of Object.values(state.config.splits || {})) {
+      const ex = (s.exercises || []).find(e => e.id === id);
+      if (ex) { cn = ex.cn || ''; en = ex.en || id; break; }
+    }
+  }
+  const showCn = cn || en;
+  const showEn = en;
+  const useCnInst = instructions_cn.length > 0;
+  const inst = useCnInst ? instructions_cn : instructions_en;
+
+  const tags = [];
+  if (level)     tags.push(`<span class="modal-meta-tag primary">${level.toUpperCase()}</span>`);
+  if (category)  tags.push(`<span class="modal-meta-tag">${category.toUpperCase()}</span>`);
+  if (equipment) tags.push(`<span class="modal-meta-tag">${equipment.toUpperCase()}</span>`);
+  for (const m of primary_muscles) tags.push(`<span class="modal-meta-tag">${m.toUpperCase()}</span>`);
+
+  const imgs = image_urls.length
+    ? `<div class="modal-images ${image_urls.length === 1 ? 'single' : ''}">${image_urls.map(u => `<img src="${u}" alt="" loading="lazy" onerror="this.style.opacity=0.2;">`).join('')}</div>`
+    : '';
+
+  const instBlock = inst.length
+    ? `<div class="modal-section-label">${useCnInst ? 'INSTRUCTIONS' : 'INSTRUCTIONS · EN'}</div>
+       <ol class="modal-instructions">${inst.map(s => `<li>${s.replace(/</g,'&lt;')}</li>`).join('')}</ol>`
+    : `<div class="modal-empty">尚無動作說明 — library 載入後將自動補上</div>`;
+
+  document.getElementById('exercise-modal-content').innerHTML = `
+    <div class="modal-head">
+      <div>
+        <div class="modal-head-cn">${showCn}</div>
+        <div class="modal-head-en">${showEn}</div>
+      </div>
+      <button class="modal-close" id="exercise-modal-close" aria-label="關閉">×</button>
+    </div>
+    <div class="modal-body">
+      ${imgs}
+      ${tags.length ? `<div class="modal-meta">${tags.join('')}</div>` : ''}
+      ${instBlock}
+    </div>
+  `;
+  document.getElementById('exercise-modal').classList.add('open');
+}
+
+function closeExerciseModal() {
+  document.getElementById('exercise-modal').classList.remove('open');
+}
+
+// 全域代理：點到任何 [data-ex-info] 就開 modal
+document.addEventListener('click', (e) => {
+  const trigger = e.target.closest('[data-ex-info]');
+  if (trigger) { e.preventDefault(); openExerciseModal(trigger.dataset.exInfo); return; }
+  if (e.target.id === 'exercise-modal' || e.target.id === 'exercise-modal-close') closeExerciseModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeExerciseModal();
+});
+
 (async () => {
   await loadConfig();
   await loadMenu();
   injectSplitStyles();
   await load();
+  loadLibrary();   // 不 await — library 是漸進增強，慢點到不影響首屏
   renderAll();
   // 離開頁面時強制 flush 待寫資料
   window.addEventListener('beforeunload', () => { if (_sbTimer) { clearTimeout(_sbTimer); _sbFlush(); } });
