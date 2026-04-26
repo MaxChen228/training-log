@@ -609,8 +609,10 @@ tailwind.config = {
   .color-picker-input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 
   /* === EXERCISE MODAL === */
-  .ex-name-btn { background: transparent; border: none; padding: 0; margin: 0; cursor: pointer; font: inherit; color: inherit; text-align: left; border-bottom: 1px dotted transparent; }
-  .ex-name-btn:hover { border-bottom-color: #7A756C; }
+  .ex-name-btn { background: transparent; border: none; padding: 0 0 0 0; margin: 0; cursor: pointer; font: inherit; color: inherit; text-align: left; border-bottom: 1px dotted #C0BCB2; transition: border-color 0.12s; display: inline-flex; align-items: center; gap: 4px; }
+  .ex-name-btn::after { content: 'ⓘ'; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #B0AAA0; transition: color 0.12s; }
+  .ex-name-btn:hover { border-bottom-color: #2A2520; }
+  .ex-name-btn:hover::after { color: #2A2520; }
   .modal-backdrop { position: fixed; inset: 0; background: rgba(42,37,32,0.45); backdrop-filter: blur(2px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.18s ease; }
   .modal-backdrop.open { opacity: 1; pointer-events: auto; }
   .modal-card { background: #FCFBFA; border: 1px solid #DBD6CD; border-radius: 6px; max-width: 680px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 18px 48px rgba(0,0,0,0.18); transform: translateY(8px); transition: transform 0.18s ease; }
